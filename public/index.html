@@ -1,0 +1,3656 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="MedFlow AI — Arabic-first emergency intake, OpenAI Whisper transcription, bilingual clinical structuring, ER routing tickets, and FHIR R4 handover for SYHF MEDATHON Jeddah.">
+<meta name="color-scheme" content="dark">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self' https://api.openai.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+<title>MedFlow AI — SYHF MEDATHON Jeddah MVP</title>
+<style>
+:root{color-scheme:dark;--night:#020617;--panel:#0f172a;--muted:#94a3b8;--line:#28364c;--cyan:#22d3ee;--emerald:#10b981;--red:#f87171;--amber:#fbbf24;--purple:#a78bfa}
+*{box-sizing:border-box}
+body{margin:0;background:#020617;font-family:'IBM Plex Sans','IBM Plex Sans Arabic',Tahoma,system-ui,sans-serif;color:#f8fafc;font-size:14px;line-height:1.5}
+button,input,textarea,select{font:inherit}
+button,a,input,textarea,select,summary{touch-action:manipulation}
+button{cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #22d3ee;outline-offset:4px}
+h1,h2,h3,p{margin:0}
+h1{font-size:clamp(26px,3vw,36px);letter-spacing:-.035em;line-height:1.17}
+h2{font-size:21px;letter-spacing:-.02em}
+h3{font-size:16px}
+small,.small{font-size:12px}
+.muted{color:#a8b6ca}
+.cyan{color:var(--cyan)}
+.emerald{color:#6ee7b7}
+.amber{color:var(--amber)}
+.red-text{color:var(--red)}
+.eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.17em;color:var(--cyan);margin-bottom:6px}
+.mesh{min-height:100vh;background:radial-gradient(900px 420px at 12% -10%,#10b98124,transparent 55%),radial-gradient(800px 380px at 92% 0%,#22d3ee20,transparent 50%),linear-gradient(180deg,#020617,#0f172a 48%,#020617)}
+.grid-fade{pointer-events:none;position:fixed;inset:0;background-image:linear-gradient(#94a3b80b 1px,transparent 1px),linear-gradient(90deg,#94a3b80b 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse at center,#000 30%,transparent 78%)}
+.glass{background:linear-gradient(180deg,#0f172aeb,#020617df);border:1px solid #94a3b829;backdrop-filter:blur(18px);border-radius:24px}
+.topbar{position:relative;z-index:2;background:#0f172ae8;border-bottom:1px solid var(--line)}
+.header-inner{max-width:1392px;margin:auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;padding:16px 28px}
+.brand{display:flex;align-items:center;gap:12px}
+.brandmark{height:42px;width:42px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,#34d399,#22d3ee);color:#0f172a;box-shadow:0 0 30px #10b98122}
+.brandmark svg{width:27px;height:27px}
+.brand strong{font-size:20px;letter-spacing:-.03em}
+.brand .eyebrow{font-size:9px;letter-spacing:.12em;margin:0}
+nav{display:flex;gap:5px;flex-wrap:wrap}
+.nav-btn,.lang button{border:1px solid transparent;background:transparent;color:#cbd5e1;border-radius:9px;padding:9px 12px;font-size:12px;font-weight:600}
+.nav-btn[aria-current=page]{background:#10b98118;border-color:#34d39944;color:#a7f3d0}
+.nav-btn:hover{background:#1e293b}
+.head-actions,.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lang{display:flex;border:1px solid var(--line);border-radius:9px;padding:2px}
+.lang button{padding:6px 9px}
+.lang button[aria-pressed=true]{background:#22d3ee22;color:#a5f3fc}
+.badge{font-size:10px;font-weight:700;letter-spacing:.04em;border:1px solid var(--line);padding:5px 9px;border-radius:99px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.badge.demo{color:#67e8f9;background:#22d3ee0d}
+.badge.green{color:#6ee7b7;background:#10b98116;border-color:#10b9814d}
+.badge.amber{color:#fde68a;background:#fbbf2412;border-color:#fbbf2440}
+.badge.red{color:#fca5a5;background:#ef444418;border-color:#ef444460}
+.badge.purple{color:#ddd6fe;background:#8b5cf61f;border-color:#8b5cf655}
+.dot{width:6px;height:6px;border-radius:50%;background:#34d399}
+.dot.amber-dot{background:#fbbf24}
+.container{max-width:1336px;padding:28px;margin:auto;position:relative}
+.prototype-strip{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:23px}
+.title-row{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:22px}
+.subtitle{color:#a8b6ca;max-width:770px;font-size:13px;margin-top:9px}
+.safety{background:#ef44440b;border:1px solid #ef44444a;border-radius:14px;padding:14px 17px;display:flex;gap:11px;align-items:flex-start;margin-bottom:22px;font-size:12px;color:#f8caca}
+.safety svg{flex:none;width:18px;margin-top:1px}
+.layout{display:grid;grid-template-columns:1.06fr .94fr;gap:24px;align-items:start}
+.kiosk-bezel{background:linear-gradient(#1e293b,#0f172a);border:1px solid #334155;border-radius:30px;padding:13px;box-shadow:0 30px 80px #0005,inset 0 1px 0 #ffffff0f}
+.bezel-top{display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;padding:0 8px 10px}
+.kiosk-inner{padding:25px;border-radius:23px}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:18px;flex-wrap:wrap}
+.scenario-bar{display:flex;gap:8px;align-items:center;background:#02061799;border:1px solid var(--line);border-radius:12px;padding:9px 11px;margin-bottom:18px;flex-wrap:wrap}
+.scenario-bar select{flex:1;min-width:210px;padding:8px 10px;font-size:12px}
+.stack{display:grid;gap:18px}
+.card{padding:23px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0;font-size:12px;color:#d3dce9}
+.field.wide{grid-column:1/-1}
+.field>span{font-weight:500}
+input:not([type=checkbox]),textarea,select{width:100%;padding:11px 12px;background:#020617b8;border:1px solid #334155;border-radius:10px;color:#f1f5f9;outline:none;min-width:0}
+input::placeholder,textarea::placeholder{color:#75859d}
+textarea{resize:vertical;line-height:1.6}
+input:hover,textarea:hover,select:hover{border-color:#64748b}
+input:focus,textarea:focus,select:focus{border-color:#22d3ee}
+input[aria-invalid=true],textarea[aria-invalid=true]{border-color:#f87171}
+.field small{font-size:10px;color:#94a3b8}
+/* Quick symptom pills & visual 0-10 pain bar */
+.quick-box{margin-top:12px;padding:12px;border:1px solid var(--line);background:#02061766;border-radius:12px}
+.quick-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.pill-btn{font-size:11px;padding:6px 10px;border-radius:99px;border:1px solid #334155;background:#0f172a;color:#cbd5e1;transition:all .15s}
+.pill-btn:hover{border-color:#22d3ee;color:#a5f3fc;background:#22d3ee12}
+.pain-bar-wrap{margin-top:12px;padding-top:10px;border-top:1px solid #1e293b}
+.pain-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#cbd5e1;margin-bottom:7px}
+.pain-scale{display:grid;grid-template-columns:repeat(11,1fr);gap:4px}
+.pain-btn{padding:7px 0;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#cbd5e1;font-size:11px;font-weight:700;text-align:center;transition:transform .12s,border-color .12s}
+.pain-btn:hover{transform:translateY(-1px);border-color:#94a3b8}
+.pain-btn[aria-pressed=true].mild{background:#10b98133;border-color:#34d399;color:#6ee7b7}
+.pain-btn[aria-pressed=true].mod{background:#fbbf2433;border-color:#fbbf24;color:#fde68a}
+.pain-btn[aria-pressed=true].sev{background:#ef44443b;border-color:#f87171;color:#fecaca}
+details{border:1px solid var(--line);border-radius:13px;padding:13px 14px;margin-top:16px}
+summary{cursor:pointer;font-size:12px;font-weight:600;list-style-position:inside}
+details .form-grid{margin-top:14px}
+.vitals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+.helper{font-size:11px;color:#a8b6ca;margin-top:9px}
+.voice-panel{border:1px solid #22d3ee38;background:linear-gradient(180deg,#22d3ee0a,#10b98105);border-radius:14px;padding:15px;margin-top:17px}
+.voice-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.ai-preview{border:1px solid #10b98144;background:#020617aa;border-radius:12px;padding:12px 14px;margin-top:12px;font-size:12px}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font-size:10px;padding:3px 8px;border-radius:99px;background:#22d3ee14;border:1px solid #22d3ee44;color:#a5f3fc}
+.chip.pos{background:#fbbf2414;border-color:#fbbf2444;color:#fde68a}
+.chip.neg{background:#10b98114;border-color:#10b98144;color:#6ee7b7}
+.followup-box{margin-top:11px;padding-top:9px;border-top:1px dashed #334155}
+.followup-btn{font-size:11px;padding:5px 10px;border-radius:99px;border:1px solid #a78bfa66;background:#8b5cf617;color:#ddd6fe;transition:all .15s}
+.followup-btn:hover{background:#8b5cf633;border-color:#c4b5fd}
+.followup-btn.applied{background:#10b98122;border-color:#34d399;color:#6ee7b7;pointer-events:none}
+/* Patient Routing Ticket Card */
+.ticket-card{border:1px solid #22d3ee66;background:linear-gradient(135deg,#0f172a,#0b2239); position:relative;overflow:hidden}
+.ticket-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:12px;padding:14px;background:#02061799;border:1px dashed #38bdf866;border-radius:16px;flex-wrap:wrap}
+.ticket-code{font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1;font-family:ui-monospace,SFMono-Regular,monospace}
+.ticket-zone{font-size:13px;font-weight:700;color:#f8fafc;margin-top:6px}
+.ticket-wait{font-size:11px;color:#94a3b8;margin-top:3px}
+/* Crowd Flow Analytics Panel */
+.flow-panel{padding:18px 22px;margin-bottom:20px}
+.zone-bars{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:12px}
+.zone-box{background:#02061777;border:1px solid var(--line);border-radius:13px;padding:12px 14px}
+.zone-head{display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin-bottom:7px}
+.bar-track{height:7px;background:#1e293b;border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;transition:width .3s ease}
+.bar-fill.red{background:#f87171}
+.bar-fill.amber{background:#fbbf24}
+.bar-fill.green{background:#34d399}
+.btn{border:1px solid #3c4c66;background:#142035;color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:600;display:inline-flex;gap:8px;align-items:center;justify-content:center;transition:background .18s,transform .18s}
+.btn:hover{background:#24334b;transform:translateY(-1px)}
+.btn.primary{background:#10b981;color:#021d17;border-color:#34d399;box-shadow:0 0 27px #10b98117}
+.btn.primary:hover{background:#34d399}
+.btn.cyan{background:#22d3ee17;color:#a5f3fc;border-color:#22d3ee55}
+.btn.purple{background:#8b5cf622;color:#ddd6fe;border-color:#8b5cf666}
+.btn.danger{background:#ef444415;border-color:#f8717155;color:#fecaca}
+.btn.subtle{background:transparent;border-color:var(--line)}
+.btn.full{width:100%;padding:13px;margin-top:17px}
+.btn.compact{font-size:11px;padding:7px 10px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:12px;color:#cbd5e1;margin-top:14px}
+.check input{width:17px;height:17px;accent-color:#10b981;flex:none;margin:1px 0}
+.check strong{color:#e2e8f0}
+.error{color:#fecaca;background:#ef444419;border:1px solid #ef444455;padding:11px;border-radius:10px;font-size:12px;margin-top:13px}
+.wave{display:flex;height:25px;gap:3px;align-items:center}
+.wave span{background:#22d3ee;width:3px;border-radius:5px;animation:wave .8s ease-in-out infinite alternate}
+.wave span:nth-child(2n){animation-delay:.23s}
+.wave span:nth-child(3n){animation-delay:.4s}
+@keyframes wave{from{height:6px}to{height:25px}}
+audio{width:100%;height:36px;margin:12px 0}
+.workflow{display:flex;gap:10px;align-items:flex-start;padding:17px 0;border-bottom:1px solid var(--line)}
+.workflow:last-child{border:0;padding-bottom:0}
+.step{border:1px solid #22d3ee44;background:#22d3ee0a;color:#67e8f9;border-radius:9px;display:grid;place-items:center;width:29px;height:29px;flex:none;font:11px ui-monospace,monospace}
+.workflow p{font-size:12px;color:#a8b6ca;margin-top:3px}
+.workflow h3{font-size:13px}
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center}
+.feature-grid>div{padding:15px 6px;border-radius:15px}
+.feature-grid strong{font-size:12px;display:block}
+.feature-grid small{font-size:10px;color:#94a3b8}
+.emergency-card{border-color:#ef444477;background:linear-gradient(135deg,#491b2870,#0f172a);box-shadow:0 0 35px #ef44440a}
+.emergency-card h2{font-size:21px;color:#fecaca}
+.note-tabs{display:flex;gap:5px;margin:17px 0;border-bottom:1px solid var(--line);padding-bottom:12px}
+.note-tabs .btn[aria-pressed=true]{background:#22d3ee1f;border-color:#22d3ee77;color:#a5f3fc}
+.note-part{border-inline-start:2px solid #22d3ee60;padding-inline-start:13px;margin:18px 0}
+.note-part dt{font-size:10px;color:#67e8f9;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.note-part dd{font-size:12px;color:#cbd5e1;white-space:pre-wrap;overflow-wrap:anywhere;margin:7px 0 0;line-height:1.65}
+.note-part.patient{border-color:#22d3ee}
+.note-part.system{border-color:#fbbf24}
+.note-part.clinician{border-color:#34d399}
+.note-part.system dt{color:#fbbf24}
+.note-part.clinician dt{color:#6ee7b7}
+.legend{display:flex;gap:13px;flex-wrap:wrap;font-size:10px;color:#a8b6ca}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:7px;height:7px;border-radius:2px;background:#22d3ee}
+.legend .system i{background:#fbbf24}
+.legend .clinician i{background:#34d399}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.stat{padding:17px 22px;border-radius:17px}
+.stat b{display:block;font-size:25px;line-height:1.2;margin-top:5px}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:18px 21px;border-bottom:1px solid var(--line)}
+.toolbar input{max-width:260px;padding:8px 11px}
+.toolbar select{max-width:190px;padding:8px}
+.table-scroll{overflow:auto}
+table{width:100%;border-collapse:collapse;text-align:start;font-size:12px}
+th{text-align:start;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#a8b6ca;background:#02061755;font-weight:600}
+td,th{padding:15px 19px;border-bottom:1px solid #28364c90}
+td{max-width:275px;overflow-wrap:anywhere}
+td .badge{font-size:9px}
+tr.selected{background:#22d3ee0a}
+tr:hover td{background:#1e293b44}
+.mono{font-family:ui-monospace,SFMono-Regular,monospace;font-size:11px;direction:ltr;unicode-bidi:isolate}
+.empty{padding:45px;text-align:center;color:#a8b6ca}
+.detail{margin-top:22px}
+.detail-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:22px}
+.patient-block{border:1px solid var(--line);background:#02061755;border-radius:14px;padding:17px}
+.patient-block h3{font-size:20px;margin:8px 0}
+.kv{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #28364c;font-size:12px}
+.kv span:first-child{color:#a8b6ca}
+.review-form{background:#10b98105;border:1px solid #10b98133;border-radius:16px;padding:17px;margin-top:17px}
+.review-form h3{color:#6ee7b7;margin-bottom:12px}
+.audit{margin-top:22px}
+.audit ol{padding:0;margin:14px 0 0;list-style:none;max-height:290px;overflow:auto}
+.audit li{padding:12px;border-inline-start:2px solid #22d3ee55;margin-bottom:8px;background:#02061755;font-size:12px;overflow-wrap:anywhere}
+.audit time{display:block;color:#94a3b8;font-size:10px;margin-bottom:3px}
+.privacy-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:19px;margin:25px 0}
+.privacy-grid article{padding:24px}
+.privacy-grid h3{margin:12px 0}
+.privacy-grid p{font-size:13px;line-height:1.7;color:#b5c1d4}
+.architecture{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
+.architecture>div{border:1px solid var(--line);background:#02061766;border-radius:13px;padding:17px;font-size:12px}
+.architecture b{display:block;color:#67e8f9;margin-bottom:5px}
+footer{padding:22px 28px;border-top:1px solid var(--line);display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap;font-size:10px;color:#94a3b8;position:relative}
+dialog{background:#0b1325;color:#f1f5f9;border:1px solid #40536f;border-radius:22px;width:min(900px,calc(100% - 28px));max-height:89vh;padding:25px;box-shadow:0 30px 100px #0009}
+dialog::backdrop{background:#020617c9;backdrop-filter:blur(7px)}
+dialog .dialog-head{display:flex;align-items:start;justify-content:space-between;gap:18px;margin-bottom:15px}
+dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;padding:17px;max-height:48vh;overflow:auto;direction:ltr;text-align:left;font-size:11px;white-space:pre-wrap;overflow-wrap:anywhere}
+.dialog-small{max-width:540px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:13px 21px;border:1px solid #34d39966;border-radius:12px;background:#0b192d;max-width:calc(100% - 30px);z-index:100;font-size:12px;box-shadow:0 8px 35px #0007}
+.save-status{font-size:10px;color:#6ee7b7}
+.skip-link{position:absolute;top:-100px;inset-inline-start:15px;z-index:200;background:#22d3ee;color:#020617;padding:10px;border-radius:8px}
+.skip-link:focus{top:10px}
+[hidden]{display:none!important}
+[dir=rtl] .brand .eyebrow{letter-spacing:0}
+[dir=rtl] .eyebrow{letter-spacing:0}
+[dir=rtl] .kiosk-inner{text-align:right}
+.reveal{animation:reveal .3s ease-out}
+@keyframes reveal{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media print{
+  .topbar,.prototype-strip,.safety,.kiosk-bezel,.feature-grid,footer,#to-emr,#speak-ticket,#print-ticket{display:none!important}
+  body,.mesh{background:#fff!important;color:#000!important}
+  .glass{border:1px solid #333!important;background:#fff!important;color:#000!important}
+}
+@media(min-width:1600px){.container{max-width:1450px}.header-inner{max-width:1506px}.kiosk-inner{padding:29px}}
+@media(max-width:1120px){.header-inner{gap:12px}nav{order:3;width:100%;justify-content:center}.privacy-grid{grid-template-columns:1fr 1fr}.architecture{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}.zone-bars{grid-template-columns:1fr}}
+@media(max-width:850px){.container{padding:22px 18px}.layout{grid-template-columns:1fr}.title-row{align-items:flex-start}.title-row>.badge{display:none}.detail-grid{grid-template-columns:1fr}.privacy-grid{grid-template-columns:1fr}.side{position:static}.kiosk-inner{padding:22px}.header-inner{padding:15px 18px}}
+@media(max-width:480px){.brand strong{font-size:18px}.brand .eyebrow{max-width:155px;font-size:8px}.nav-btn{font-size:10px;padding:8px}.head-actions{gap:5px}.form-grid{grid-template-columns:1fr}.field.wide{grid-column:auto}.vitals-grid{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr;gap:8px}.stat{padding:13px}.stat b{font-size:22px}.architecture{grid-template-columns:1fr}.kiosk-inner{padding:18px}.container{padding:20px 12px}.card{padding:19px}.title-row h1{font-size:28px}.feature-grid strong{font-size:10px}.toolbar input,.toolbar select{max-width:100%}.panel-head{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body class="mesh">
+<a href="#main" class="skip-link" data-en="Skip to content" data-ar="انتقل للمحتوى">Skip to content</a>
+<div class="grid-fade"></div>
+
+<header class="topbar">
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brandmark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 4v16M4 12h16"/><circle cx="12" cy="12" r="9"/></svg>
+      </div>
+      <div>
+        <strong>MedFlow AI</strong>
+        <p class="eyebrow" data-en="SYHF MEDATHON Jeddah · Emergency Intake MVP" data-ar="ميداثون جدة SYHF · استقبال الطوارئ الذكي">SYHF MEDATHON Jeddah · Emergency Intake MVP</p>
+      </div>
+    </div>
+
+    <nav aria-label="Main navigation">
+      <button class="nav-btn" data-tab="kiosk" aria-current="page" data-en="Patient Intake Kiosk" data-ar="كشك استقبال المريض">Patient Intake Kiosk</button>
+      <button class="nav-btn" data-tab="emr" data-en="Clinician Dashboard" data-ar="لوحة الطبيب">Clinician Dashboard</button>
+      <button class="nav-btn" data-tab="pdpl" data-en="PDPL & Architecture" data-ar="الخصوصية والبنية">PDPL & Architecture</button>
+    </nav>
+
+    <div class="head-actions">
+      <button id="ai-status-btn" type="button" class="btn compact purple" title="Configure OpenAI Whisper & GPT-4o-mini API">
+        <span id="ai-dot" class="dot amber-dot"></span>
+        <span id="ai-status-text" data-en="AI Engine · Setup" data-ar="محرك الذكاء · إعداد">AI Engine · Setup</span>
+      </button>
+      <div class="lang" aria-label="Language">
+        <button id="lang-en" aria-pressed="true" lang="en">EN</button>
+        <button id="lang-ar" aria-pressed="false" lang="ar">العربية</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="container" tabindex="-1">
+  <div class="prototype-strip">
+    <div class="row">
+      <span class="badge demo" data-en="SYHF JEDDAH · CROWD FLOW & DIGITAL TRANSFORMATION" data-ar="ميداثون جدة · إدارة تدفق المرضى والتحول الرقمي">SYHF JEDDAH · CROWD FLOW & DIGITAL TRANSFORMATION</span>
+      <span class="badge amber" data-en="NOT FOR CLINICAL USE" data-ar="غير مخصص للاستخدام السريري">NOT FOR CLINICAL USE</span>
+      <span class="badge" data-en="SYNTHETIC PATIENT DATA" data-ar="بيانات مرضى وهمية">SYNTHETIC PATIENT DATA</span>
+    </div>
+    <span id="save-status" class="save-status" role="status"></span>
+  </div>
+
+  <!-- VIEW 1: PATIENT INTAKE KIOSK -->
+  <section id="view-kiosk" class="view" aria-labelledby="kiosk-title">
+    <div class="title-row">
+      <div>
+        <p class="eyebrow" data-en="Patient-facing · Tablet kiosk (Jeddah ED & Pilgrim Gateways)" data-ar="واجهة المريض · كشك لوحي (طوارئ جدة وبوابات ضيوف الرحمن)">Patient-facing · Tablet kiosk (Jeddah ED & Pilgrim Gateways)</p>
+        <h1 id="kiosk-title" data-en="Emergency intake before the doctor" data-ar="تسجيل الطوارئ قبل مقابلة الطبيب">Emergency intake before the doctor</h1>
+        <p class="subtitle" data-en="Capture the patient's own voice in Arabic or English via OpenAI Whisper, structure bilingual HPI notes, issue smart routing tickets, and keep every clinical decision with a human." data-ar="التقط صوت المريض بالعربية أو الإنجليزية عبر OpenAI Whisper، ونظّم الملاحظات السريرية ثنائية اللغة، وأصدر تذكرة توجيه المسار مع إبقاء كل قرار سريري بيد الطبيب.">Capture the patient's own voice in Arabic or English via OpenAI Whisper, structure bilingual HPI notes, issue smart routing tickets, and keep every clinical decision with a human.</p>
+      </div>
+      <span class="badge green" id="sync-badge" data-en="Live Kiosk ↔ EMR Sync Ready" data-ar="مزامنة فورية بين الكشك ولوحة الطبيب">Live Kiosk ↔ EMR Sync Ready</span>
+    </div>
+
+    <aside class="safety" aria-label="Emergency warning">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5m0 3v1"/></svg>
+      <p data-en="If you have severe chest pain, severe difficulty breathing, heavy bleeding, loss of consciousness, stroke symptoms or another life-threatening emergency, alert emergency staff immediately. Do not wait for this kiosk." data-ar="إذا كنت تعاني من ألم شديد في الصدر، أو صعوبة شديدة في التنفس، أو نزيف غزير، أو فقدان الوعي، أو أعراض سكتة دماغية، أو حالة أخرى تهدد الحياة، فأبلغ طاقم الطوارئ فوراً. لا تنتظر هذا الكشك.">If you have severe chest pain, severe difficulty breathing, heavy bleeding, loss of consciousness, stroke symptoms or another life-threatening emergency, alert emergency staff immediately. Do not wait for this kiosk.</p>
+    </aside>
+
+    <div class="layout">
+      <div class="kiosk-bezel">
+        <div class="bezel-top">
+          <span>MedFlow Kiosk · SYHF JEDDAH MVP</span>
+          <span id="bezel-mode" data-en="OpenAI Whisper + Bilingual Structurer" data-ar="تفريغ صوتي ذكي + هيكلة ثنائية اللغة">OpenAI Whisper + Bilingual Structurer</span>
+        </div>
+        <div class="glass kiosk-inner">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow emerald" data-en="Self check-in · ~40 sec average" data-ar="تسجيل ذاتي · متوسط ٤٠ ثانية">Self check-in · ~40 sec average</p>
+              <h2 data-en="Tell us why you are here" data-ar="أخبرنا بسبب حضورك">Tell us why you are here</h2>
+            </div>
+          </div>
+
+          <div class="scenario-bar" aria-label="Demo clinical scenarios">
+            <select id="scenario-select" aria-label="Select demo clinical scenario">
+              <option value="acs" data-en="1 · Acute Chest Pain & Dyspnea (Red Flag · Arabic)" data-ar="١ · ألم صدر حاد وضيق تنفس (إنذار فوري · عربي)">1 · Acute Chest Pain & Dyspnea (Red Flag · Arabic)</option>
+              <option value="umrah_asthma" data-en="2 · Umrah Visitor Acute Wheezing (Red Flag · Arabic)" data-ar="٢ · زائر عمرة — نوبة ربو وضيق تنفس (إنذار فوري)">2 · Umrah Visitor Acute Wheezing (Red Flag · Arabic)</option>
+              <option value="peds_fever" data-en="3 · High Fever & Persistent Vomiting (Priority · Bilingual)" data-ar="٣ · حمى شديدة وقيء متكرر (أولوية · ثنائي اللغة)">3 · High Fever & Persistent Vomiting (Priority · Bilingual)</option>
+              <option value="trauma_ankle" data-en="4 · Minor Sports Ankle Sprain (Standard · English)" data-ar="٤ · التواء كاحل رياضي بسيط (اعتيادي · إنجليزي)">4 · Minor Sports Ankle Sprain (Standard · English)</option>
+            </select>
+            <button id="load-demo" class="btn cyan compact" type="button" data-en="Load scenario" data-ar="تحميل السيناريو">Load scenario</button>
+          </div>
+
+          <form id="intake-form" novalidate>
+            <div class="form-grid">
+              <label class="field">
+                <span data-en="Patient name *" data-ar="اسم المريض *">Patient name *</span>
+                <input id="field-name" required maxlength="100" autocomplete="off" placeholder="DEMO · Patient Atlas">
+              </label>
+              <label class="field">
+                <span data-en="Saudi ID / Iqama / Visitor ID *" data-ar="الهوية الوطنية / الإقامة / رقم الزائر *">Saudi ID / Iqama / Visitor ID *</span>
+                <input id="field-id" required inputmode="numeric" maxlength="10" pattern="[12][0-9]{9}" autocomplete="off" placeholder="1000007788" dir="ltr" aria-describedby="id-hint">
+                <small id="id-hint" data-en="Synthetic only · 10 digits starting with 1 or 2" data-ar="وهمي فقط · 10 أرقام تبدأ بـ 1 أو 2">Synthetic only · 10 digits starting with 1 or 2</small>
+              </label>
+              <label class="field">
+                <span data-en="Age (years) *" data-ar="العمر بالسنوات *">Age (years) *</span>
+                <input id="field-age" type="number" required min="0" max="120" step="1" placeholder="54">
+              </label>
+              <label class="field">
+                <span data-en="Sex (optional)" data-ar="الجنس (اختياري)">Sex (optional)</span>
+                <select id="field-sex">
+                  <option value="unknown" data-en="Prefer not to say" data-ar="أفضل عدم الإجابة">Prefer not to say</option>
+                  <option value="male" data-en="Male" data-ar="ذكر">Male</option>
+                  <option value="female" data-en="Female" data-ar="أنثى">Female</option>
+                  <option value="other" data-en="Other" data-ar="آخر">Other</option>
+                </select>
+              </label>
+              <label class="field wide">
+                <span data-en="Chief complaint / editable transcript *" data-ar="الشكوى الرئيسية / نص قابل للتعديل *">Chief complaint / editable transcript *</span>
+                <textarea id="field-complaint" required rows="4" maxlength="3000" dir="auto" placeholder="Speak with microphone, tap quick symptoms below, or type in Arabic or English…" data-placeholder-en="Speak with microphone, tap quick symptoms below, or type in Arabic or English…" data-placeholder-ar="تحدث عبر الميكروفون، أو اختر الأعراض السريعة أدناه، أو اكتب بالعربية أو الإنجليزية…"></textarea>
+              </label>
+            </div>
+
+            <!-- FEATURE 3: QUICK SYMPTOM PILLS & VISUAL 0-10 PAIN BAR -->
+            <div class="quick-box">
+              <div class="row" style="justify-content:space-between">
+                <small class="muted" data-en="Quick-tap symptom location (optional touch helper):" data-ar="اختيار سريع لموقع العرض (مساعد لمسي اختياري):">Quick-tap symptom location (optional touch helper):</small>
+              </div>
+              <div id="quick-symptom-pills" class="quick-pills"></div>
+
+              <div class="pain-bar-wrap">
+                <div class="pain-head">
+                  <span data-en="Visual Pain Score (0 = No pain · 10 = Worst possible)" data-ar="مقياس شدة الألم (٠ = بلا ألم · ١٠ = ألم شديد جداً)">Visual Pain Score (0 = No pain · 10 = Worst possible)</span>
+                  <strong id="pain-selected-label" class="cyan" data-en="Not selected" data-ar="غير محدد">Not selected</strong>
+                </div>
+                <div id="pain-scale-bar" class="pain-scale" role="group" aria-label="Pain score 0 to 10"></div>
+              </div>
+            </div>
+
+            <div class="voice-panel">
+              <div class="voice-head">
+                <span class="eyebrow" style="margin:0" data-en="Voice AI Capture · OpenAI Whisper + Live Speech" data-ar="التقاط صوتي ذكي · OpenAI Whisper والتعرف الفوري">Voice AI Capture · OpenAI Whisper + Live Speech</span>
+                <select id="voice-lang" aria-label="Speech language" style="width:auto;padding:4px 8px;font-size:11px">
+                  <option value="ar" data-en="Voice: Arabic (السعودية)" data-ar="الصوت: العربية (السعودية)">Voice: Arabic (السعودية)</option>
+                  <option value="en" data-en="Voice: English" data-ar="الصوت: الإنجليزية">Voice: English</option>
+                </select>
+              </div>
+              <div class="row">
+                <button id="voice-btn" type="button" class="btn cyan">
+                  <span aria-hidden="true">●</span>
+                  <span data-en="Record microphone" data-ar="تسجيل بالميكروفون">Record microphone</span>
+                </button>
+                <button id="stop-recording" type="button" class="btn danger" hidden data-en="Stop & Transcribe" data-ar="إيقاف وتفريغ النص">Stop & Transcribe</button>
+                <button id="sim-voice-btn" type="button" class="btn compact purple" data-en="Simulate Arabic Voice" data-ar="محاكاة صوت المريض">Simulate Arabic Voice</button>
+                <button id="ai-structure-btn" type="button" class="btn compact" data-en="✨ AI Extract & Translate" data-ar="✨ استخلاص وترجمة ذكية">✨ AI Extract & Translate</button>
+                <span id="record-timer" class="mono" hidden>00:00</span>
+                <div id="voice-wave" class="wave" hidden aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+              </div>
+              <p id="voice-status" class="helper" role="status"></p>
+              <audio id="audio-preview" controls hidden aria-label="Recording playback"></audio>
+              <button id="delete-recording" type="button" class="btn compact subtle" hidden data-en="Delete recording" data-ar="حذف التسجيل">Delete recording</button>
+
+              <div id="ai-preview-card" class="ai-preview" hidden>
+                <div class="row" style="justify-content:space-between">
+                  <strong class="emerald" id="ai-preview-title" data-en="AI-Structured Bilingual Handover" data-ar="ملخص التسليم السريري ثنائي اللغة">AI-Structured Bilingual Handover</strong>
+                  <span class="badge purple" id="ai-provider-badge">AI NLP</span>
+                </div>
+                <p id="ai-preview-en" class="helper" style="color:#e2e8f0;margin-top:6px" dir="ltr"></p>
+                <p id="ai-preview-ar" class="helper" style="color:#cbd5e1;margin-top:4px" dir="rtl"></p>
+                <div id="ai-preview-chips" class="chip-row"></div>
+
+                <!-- FEATURE 1: AI FOLLOW-UP CLARIFIER CHIPS -->
+                <div id="ai-followup-box" class="followup-box" hidden>
+                  <small class="muted" style="display:block;margin-bottom:6px" data-en="AI Smart Follow-Up Clarifiers (Tap to add missing detail):" data-ar="أسئلة توضيحية ذكية من الذكاء الاصطناعي (اضغط لإضافة التفصيل):">AI Smart Follow-Up Clarifiers (Tap to add missing detail):</small>
+                  <div id="ai-followup-row" class="chip-row"></div>
+                </div>
+              </div>
+            </div>
+
+            <label class="check">
+              <input type="checkbox" id="confirm-transcript" required>
+              <span data-en="This accurately describes my complaint. I have reviewed and confirmed this text." data-ar="هذا النص يصف شكواي بدقة. لقد راجعته وأؤكد صحته.">This accurately describes my complaint. I have reviewed and confirmed this text.</span>
+            </label>
+
+            <details id="health-details-box">
+              <summary data-en="Health details · optional (auto-filled when mentioned in voice)" data-ar="التفاصيل الصحية · اختياري (تُستخلص تلقائياً عند ذكرها صوتياً)">Health details · optional (auto-filled when mentioned in voice)</summary>
+              <div class="form-grid">
+                <label class="field wide">
+                  <span data-en="Allergies" data-ar="الحساسية">Allergies</span>
+                  <input id="field-allergies" maxlength="500" placeholder="Not provided" data-placeholder-en="Not provided" data-placeholder-ar="غير مذكور">
+                </label>
+                <label class="field wide">
+                  <span data-en="Current medications" data-ar="الأدوية الحالية">Current medications</span>
+                  <input id="field-medications" maxlength="500">
+                </label>
+                <label class="field wide">
+                  <span data-en="Major medical history" data-ar="التاريخ المرضي المهم">Major medical history</span>
+                  <textarea id="field-history" maxlength="1000" rows="2" dir="auto"></textarea>
+                </label>
+              </div>
+            </details>
+
+            <details>
+              <summary data-en="Vital signs · optional patient-entered values" data-ar="العلامات الحيوية · قيم اختيارية يُدخلها المريض">Vital signs · optional patient-entered values</summary>
+              <p class="helper" data-en="Leave blank if unknown. Values entered here are unverified patient reports. A clinician records confirmed measurements in the review screen." data-ar="اتركها فارغة إن لم تعرفها. هذه قيم يذكرها المريض ولم يُتحقق منها. يسجل الطبيب القياسات المؤكدة في شاشة المراجعة.">Leave blank if unknown. Values entered here are unverified patient reports. A clinician records confirmed measurements in the review screen.</p>
+              <div class="vitals-grid" id="intake-vitals"></div>
+            </details>
+
+            <label class="check">
+              <input id="synthetic-only" type="checkbox" required>
+              <span>
+                <strong data-en="I am using fictional demonstration data only." data-ar="أستخدم بيانات عرض وهمية فقط.">I am using fictional demonstration data only.</strong><br>
+                <span class="muted" data-en="Never enter real patient information or real government identifiers." data-ar="لا تُدخل معلومات مرضى حقيقية أو أرقام هويات حقيقية.">Never enter real patient information or real government identifiers.</span>
+              </span>
+            </label>
+
+            <div id="form-error" class="error" role="alert" hidden></div>
+            <button type="submit" id="submit-intake" class="btn primary full" data-en="Confirm & create intake" data-ar="تأكيد وإنشاء طلب الاستقبال">Confirm & create intake</button>
+            <button id="new-intake" type="button" class="btn subtle full" data-en="Start a new intake" data-ar="بدء طلب استقبال جديد">Start a new intake</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="stack side">
+        <div id="redflag-live" class="glass card emergency-card" role="alert" hidden>
+          <span class="badge red" data-en="Prototype urgency flag" data-ar="إشارة استعجال تجريبية">Prototype urgency flag</span>
+          <h2 style="margin-top:12px" data-en="IMMEDIATE HUMAN TRIAGE REQUIRED" data-ar="يلزم فرز بشري فوري">IMMEDIATE HUMAN TRIAGE REQUIRED</h2>
+          <p class="subtitle" data-en="Alert emergency staff now. Do not wait for registration or this kiosk. The demonstration rules cannot assess clinical severity." data-ar="أبلغ طاقم الطوارئ الآن. لا تنتظر التسجيل أو هذا الكشك. القواعد التجريبية لا تقيّم شدة الحالة سريرياً.">Alert emergency staff now. Do not wait for registration or this kiosk. The demonstration rules cannot assess clinical severity.</p>
+        </div>
+
+        <!-- FEATURE 2: PATIENT ROUTING & QUEUE TICKET CARD -->
+        <article id="ticket-card" class="glass card ticket-card reveal" hidden>
+          <div class="panel-head" style="margin-bottom:6px">
+            <div>
+              <p class="eyebrow" data-en="Crowd & Patient Flow Routing Pass" data-ar="تذكرة توجيه مسار المريض في الطوارئ">Crowd & Patient Flow Routing Pass</p>
+              <h2 data-en="Your ED Queue & Zone Ticket" data-ar="تذكرة الانتظار والمسار المخصص">Your ED Queue & Zone Ticket</h2>
+            </div>
+            <span id="ticket-urgency-badge" class="badge"></span>
+          </div>
+          <div class="ticket-inner">
+            <div>
+              <span class="small muted" data-en="Boarding Ticket #" data-ar="رقم التذكرة">Boarding Ticket #</span>
+              <div id="ticket-number" class="ticket-code cyan">E-104</div>
+              <div id="ticket-zone" class="ticket-zone"></div>
+              <div id="ticket-wait" class="ticket-wait"></div>
+            </div>
+            <div id="ticket-qr"></div>
+          </div>
+          <div class="row" style="margin-top:14px">
+            <button id="speak-ticket" type="button" class="btn compact cyan" data-en="🔊 Speak Instructions (AR/EN)" data-ar="🔊 قراءة التوجيه صوتياً">🔊 Speak Instructions (AR/EN)</button>
+            <button id="print-ticket" type="button" class="btn compact subtle" data-en="🖨️ Print Ticket" data-ar="🖨️ طباعة التذكرة">🖨️ Print Ticket</button>
+          </div>
+        </article>
+
+        <article id="workflow-card" class="glass card">
+          <p class="eyebrow" data-en="SYHF Medathon Value Proposition" data-ar="القيمة المضافة في ميداثون جدة">SYHF Medathon Value Proposition</p>
+          <h2 data-en="Your words. A faster, safer ED handover." data-ar="كلماتك. تسليم أسرع وأكثر أماناً في الطوارئ.">Your words. A faster, safer ED handover.</h2>
+          <div class="workflow">
+            <span class="step">01</span>
+            <div>
+              <h3 data-en="Arabic-First Voice Capture (OpenAI Whisper)" data-ar="التقاط صوتي بالعربية أولاً (OpenAI Whisper)">Arabic-First Voice Capture (OpenAI Whisper)</h3>
+              <p data-en="Patients speak naturally in Saudi Arabic or English. Audio is transcribed, allergies/meds are auto-extracted, and smart follow-up chips clarify missing HPI details." data-ar="يتحدث المريض بعفوية بالعربية أو الإنجليزية. يُفرّغ النص وتُستخرج الحساسية والأدوية تلقائياً مع أسئلة توضيحية ذكية.">Patients speak naturally in Saudi Arabic or English. Audio is transcribed, allergies/meds are auto-extracted, and smart follow-up chips clarify missing HPI details.</p>
+            </div>
+          </div>
+          <div class="workflow">
+            <span class="step">02</span>
+            <div>
+              <h3 data-en="Bilingual Structuring + Deterministic Safety Floor" data-ar="هيكلة ثنائية اللغة + صمام أمان حتمي">Bilingual Structuring + Deterministic Safety Floor</h3>
+              <p data-en="Generates instant Arabic & English SOAP notes and QR zone routing tickets. Hard red-flag rules can never be downgraded by AI." data-ar="ينشئ ملاحظات SOAP فورية بالعربية والإنجليزية وتذاكر توجيه ذكية. لا يمكن للذكاء الاصطناعي تخفيض إشارات الإنذار الحرجة.">Generates instant Arabic & English SOAP notes and QR zone routing tickets. Hard red-flag rules can never be downgraded by AI.</p>
+            </div>
+          </div>
+          <div class="workflow">
+            <span class="step">03</span>
+            <div>
+              <h3 data-en="Live Clinician Queue & NPHIES / FHIR R4 Export" data-ar="طابور أطباء فوري وتصدير FHIR R4 / NPHIES">Live Clinician Queue & NPHIES / FHIR R4 Export</h3>
+              <p data-en="Real-time sync to the clinician dashboard with full provenance tracking, clinician override auditing, and HL7 FHIR R4 Bundle generation." data-ar="مزامنة لحظية مع لوحة الطبيب مع تتبع مصدر كل معلومة، وتدقيق قرارات الطبيب، وتوليد حزمة FHIR R4 القياسية.">Real-time sync to the clinician dashboard with full provenance tracking, clinician override auditing, and HL7 FHIR R4 Bundle generation.</p>
+            </div>
+          </div>
+          <p class="helper amber" style="margin-top:18px" data-en="Prototype rules — not validated clinical triage. No ESI assignment, diagnosis, or treatment." data-ar="قواعد تجريبية — ليست فرزاً سريرياً معتمداً. لا تُحدد ESI أو تشخيصاً أو علاجاً.">Prototype rules — not validated clinical triage. No ESI assignment, diagnosis, or treatment.</p>
+        </article>
+
+        <article id="soap-card" class="glass card reveal" hidden>
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow emerald" data-en="Intake created · review pending" data-ar="تم إنشاء الطلب · بانتظار المراجعة">Intake created · review pending</p>
+              <h2 data-en="Structured clinical note" data-ar="ملاحظة سريرية منظمة">Structured clinical note</h2>
+            </div>
+            <span id="soap-badge" class="badge"></span>
+          </div>
+          <p class="helper" data-en="Suggested urgency — clinician confirmation required" data-ar="استعجال مقترح — يلزم تأكيد الطبيب">Suggested urgency — clinician confirmation required</p>
+          <div class="note-tabs">
+            <button class="btn compact" data-note-lang="en" aria-pressed="true">English</button>
+            <button class="btn compact" data-note-lang="ar" aria-pressed="false">العربية</button>
+          </div>
+          <dl id="soap-body"></dl>
+          <button id="to-emr" class="btn cyan full" data-en="Open clinician review" data-ar="فتح مراجعة الطبيب">Open clinician review</button>
+        </article>
+
+        <div class="feature-grid">
+          <div class="glass">
+            <strong class="emerald" data-en="OpenAI Whisper" data-ar="تفريغ صوتي ذكي">OpenAI Whisper</strong>
+            <small data-en="AR/EN + Clarifiers" data-ar="عربي / إنجليزي">AR/EN + Clarifiers</small>
+          </div>
+          <div class="glass">
+            <strong class="cyan" data-en="QR Zone Ticket" data-ar="تذكرة توجيه المسار">QR Zone Ticket</strong>
+            <small data-en="Audio TTS + Routing" data-ar="توجيه صوتي ومرئي">Audio TTS + Routing</small>
+          </div>
+          <div class="glass">
+            <strong class="amber" data-en="FHIR R4 + PDPL" data-ar="FHIR R4 + الخصوصية">FHIR R4 + PDPL</strong>
+            <small data-en="Human-in-the-loop" data-ar="مراجعة بشرية كاملة">Human-in-the-loop</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VIEW 2: CLINICIAN DASHBOARD -->
+  <section id="view-emr" class="view" hidden aria-labelledby="emr-title">
+    <div class="title-row">
+      <div>
+        <p class="eyebrow" data-en="Clinician workspace · Crowd & Patient Flow Triage Queue" data-ar="مساحة الطبيب · إدارة تدفق المرضى وطابور الفرز">Clinician workspace · Crowd & Patient Flow Triage Queue</p>
+        <h1 id="emr-title" data-en="Emergency department queue" data-ar="طابور قسم الطوارئ">Emergency department queue</h1>
+        <p class="subtitle" data-en="Real-time intake stream sorted by clinical urgency. Prototype urgency suggestions require human assessment." data-ar="تدفق لحظي لطلبات الاستقبال مرتبة حسب الأولوية. تتطلب اقتراحات الاستعجال تقييماً بشرياً.">Real-time intake stream sorted by clinical urgency. Prototype urgency suggestions require human assessment.</p>
+      </div>
+      <div class="row">
+        <span class="badge green" id="role-badge"></span>
+        <button class="btn compact" id="leave-role" data-en="Leave clinician role" data-ar="مغادرة دور الطبيب">Leave clinician role</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="glass stat">
+        <span class="small muted" data-en="Active encounters" data-ar="الزيارات النشطة">Active encounters</span>
+        <b id="stat-total">0</b>
+      </div>
+      <div class="glass stat">
+        <span class="small muted" data-en="Immediate human triage" data-ar="فرز بشري فوري">Immediate human triage</span>
+        <b id="stat-immediate" class="red-text">0</b>
+      </div>
+      <div class="glass stat">
+        <span class="small muted" data-en="Notes confirmed" data-ar="ملاحظات مؤكدة">Notes confirmed</span>
+        <b id="stat-reviewed" class="emerald">0</b>
+      </div>
+      <div class="glass stat">
+        <span class="small muted" data-en="Avg self-intake time" data-ar="متوسط زمن التسجيل الذاتي">Avg self-intake time</span>
+        <b id="stat-flow" class="cyan">42s</b>
+      </div>
+    </div>
+
+    <!-- FEATURE 4: HOSPITAL IMPACT & CROWD FLOW ANALYTICS PANEL -->
+    <div class="glass flow-panel">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <span class="eyebrow" data-en="SYHF Track 1 · Live ED Crowd Distribution & Triage Impact" data-ar="المسار ١ · توزيع الحشود في الطوارئ والأثر التشغيلي">SYHF Track 1 · Live ED Crowd Distribution & Triage Impact</span>
+          <h3 data-en="Hospital Zone Load & Nurse Time Saved" data-ar="عبء مناطق الطوارئ والوقت الموفّر لطاقم الفرز">Hospital Zone Load & Nurse Time Saved</h3>
+        </div>
+        <div class="row">
+          <span class="badge green" id="stat-time-saved">~12.6 mins nurse triage time saved</span>
+          <span class="badge demo" data-en="100% Bilingual AR/EN Handover" data-ar="تسليم ثنائي اللغة ١٠٠٪">100% Bilingual AR/EN Handover</span>
+        </div>
+      </div>
+      <div class="zone-bars">
+        <div class="zone-box">
+          <div class="zone-head">
+            <span class="red-text" data-en="Zone A · Resuscitation / Immediate" data-ar="المنطقة أ · الإنعاش والفرز الفوري">Zone A · Resuscitation / Immediate</span>
+            <strong id="zone-a-count">0</strong>
+          </div>
+          <div class="bar-track"><div id="zone-a-bar" class="bar-fill red" style="width:0%"></div></div>
+        </div>
+        <div class="zone-box">
+          <div class="zone-head">
+            <span class="amber" data-en="Zone B · Acute Priority Bay" data-ar="المنطقة ب · التقييم العاجل ذو الأولوية">Zone B · Acute Priority Bay</span>
+            <strong id="zone-b-count">0</strong>
+          </div>
+          <div class="bar-track"><div id="zone-b-bar" class="bar-fill amber" style="width:0%"></div></div>
+        </div>
+        <div class="zone-box">
+          <div class="zone-head">
+            <span class="emerald" data-en="Zone C · Standard Fast-Track" data-ar="المنطقة ج · عيادة المسار السريع">Zone C · Standard Fast-Track</span>
+            <strong id="zone-c-count">0</strong>
+          </div>
+          <div class="bar-track"><div id="zone-c-bar" class="bar-fill green" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass">
+      <div class="toolbar">
+        <h3 data-en="Active patient queue" data-ar="طابور المرضى النشط">Active patient queue</h3>
+        <div class="row">
+          <input id="queue-search" type="search" aria-label="Search synthetic patients" placeholder="Search patient, ticket, or complaint…" data-placeholder-en="Search patient, ticket, or complaint…" data-placeholder-ar="ابحث عن المريض أو التذكرة أو الشكوى…">
+          <select id="queue-filter" aria-label="Queue filter">
+            <option value="all" data-en="All encounters" data-ar="جميع الزيارات">All encounters</option>
+            <option value="pending" data-en="Review pending" data-ar="بانتظار المراجعة">Review pending</option>
+            <option value="immediate" data-en="Immediate flag" data-ar="إشارة فورية">Immediate flag</option>
+            <option value="confirmed" data-en="Note confirmed" data-ar="الملاحظة مؤكدة">Note confirmed</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th data-en="Ticket / Arrived" data-ar="التذكرة / الوصول">Ticket / Arrived</th>
+              <th data-en="Patient / ID" data-ar="المريض / الهوية">Patient / ID</th>
+              <th data-en="Chief complaint & AI summary" data-ar="الشكوى الرئيسية والملخص الذكي">Chief complaint & AI summary</th>
+              <th data-en="Prototype urgency & Zone" data-ar="إشارة الاستعجال والمسار">Prototype urgency & Zone</th>
+              <th data-en="Review" data-ar="مراجعة">Review</th>
+            </tr>
+          </thead>
+          <tbody id="queue-body"></tbody>
+        </table>
+      </div>
+      <p class="helper" style="padding:12px 20px" data-en="Red flags remain visible even after clinician override. Queue updates live across connected Kiosk and Clinician screens." data-ar="تبقى إشارات الإنذار ظاهرة حتى بعد تعديل الطبيب. يتحدث الطابور لحظياً بين شاشات الكشك والطبيب.">Red flags remain visible even after clinician override. Queue updates live across connected Kiosk and Clinician screens.</p>
+    </div>
+
+    <article id="emr-detail" class="glass card detail reveal" hidden>
+      <div id="detail-head" class="panel-head"></div>
+      <div class="legend">
+        <span><i></i><span data-en="Patient-reported" data-ar="ما ذكره المريض">Patient-reported</span></span>
+        <span class="system"><i></i><span data-en="System / AI suggestion" data-ar="اقتراح النظام / الذكاء الاصطناعي">System / AI suggestion</span></span>
+        <span class="clinician"><i></i><span data-en="Clinician-confirmed" data-ar="ما أكده الطبيب">Clinician-confirmed</span></span>
+      </div>
+      <div id="emr-detail-body" class="detail-grid" style="margin-top:18px"></div>
+    </article>
+
+    <article class="glass card audit">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow" data-en="Traceable demo workflow" data-ar="سير عمل تجريبي قابل للتتبع">Traceable demo workflow</p>
+          <h2 data-en="Audit trail" data-ar="سجل التدقيق">Audit trail</h2>
+        </div>
+        <button id="export-audit" class="btn compact" data-en="Download audit JSON" data-ar="تنزيل سجل JSON">Download audit JSON</button>
+      </div>
+      <p class="helper" data-en="Records intake creation, OpenAI transcription, clinician access, urgency overrides, and FHIR R4 exports." data-ar="يسجل إنشاء الطلب، والتفريغ الصوتي، ودخول الطبيب، وتعديل الأولوية، وتصدير FHIR R4.">Records intake creation, OpenAI transcription, clinician access, urgency overrides, and FHIR R4 exports.</p>
+      <ol id="audit-list"></ol>
+    </article>
+  </section>
+
+  <!-- VIEW 3: PDPL & ARCHITECTURE -->
+  <section id="view-pdpl" class="view" hidden aria-labelledby="privacy-title">
+    <p class="eyebrow" data-en="Trust through honest design · Saudi Vision 2030 Alignment" data-ar="الثقة من خلال التصميم الواضح · متوافق مع رؤية السعودية 2030">Trust through honest design · Saudi Vision 2030 Alignment</p>
+    <h1 id="privacy-title" data-en="PDPL-Aware Architecture & SYHF Medathon Fit" data-ar="تصميم يراعي نظام حماية البيانات الشخصية (PDPL) وميداثون جدة">PDPL-Aware Architecture & SYHF Medathon Fit</h1>
+    <p class="subtitle" data-en="Built for SYHF Jeddah Tracks 1 & 2: Healthcare Crowd & Patient Flow Management and Healthcare Digital Transformation." data-ar="مصمم لمساري ميداثون جدة SYHF: إدارة الحشود وتدفق المرضى، والتحول الرقمي الصحي.">Built for SYHF Jeddah Tracks 1 & 2: Healthcare Crowd & Patient Flow Management and Healthcare Digital Transformation.</p>
+
+    <div class="privacy-grid">
+      <article class="glass">
+        <span class="badge green" data-en="IMPLEMENTED · MVP" data-ar="منفذ · نموذج أولي فاعل">IMPLEMENTED · MVP</span>
+        <h3 data-en="Data Minimization & Provenance" data-ar="تقليل البيانات ووضوح المصدر">Data Minimization & Provenance</h3>
+        <p data-en="National/Visitor IDs are masked in the queue table and revealed only inside clinician review. Raw audio blobs are processed for transcription and never persisted to disk or database." data-ar="تُحجب أرقام الهوية في جدول الطابور ولا تظهر إلا داخل شاشة مراجعة الطبيب. يُعالج الصوت لأغراض التفريغ النصي فقط ولا يُخزن على القرص أو قاعدة البيانات.">National/Visitor IDs are masked in the queue table and revealed only inside clinician review. Raw audio blobs are processed for transcription and never persisted to disk or database.</p>
+      </article>
+      <article class="glass">
+        <span class="badge green" data-en="IMPLEMENTED · MVP" data-ar="منفذ · نموذج أولي فاعل">IMPLEMENTED · MVP</span>
+        <h3 data-en="Human-in-the-Loop & FHIR R4" data-ar="تحكم بشري وتكامل FHIR R4">Human-in-the-Loop & FHIR R4</h3>
+        <p data-en="Every AI transcript requires patient confirmation; every triage flag requires clinician confirmation or documented override. Exports standard HL7 FHIR R4 Document Bundles with LOINC vital observations." data-ar="يتطلب كل تفريغ صوتي تأكيد المريض، وتتطلب كل إشارة فرز تأكيد الطبيب أو توثيق سبب التعديل. يصدر حزم مستندات HL7 FHIR R4 القياسية.">Every AI transcript requires patient confirmation; every triage flag requires clinician confirmation or documented override. Exports standard HL7 FHIR R4 Document Bundles with LOINC vital observations.</p>
+      </article>
+      <article class="glass">
+        <span class="badge amber" data-en="HOSPITAL DEPLOYMENT ROADMAP" data-ar="خارطة طريق النشر في المستشفيات">HOSPITAL DEPLOYMENT ROADMAP</span>
+        <h3 data-en="Sovereign Saudi Cloud & NPHIES" data-ar="سحابة وطنية سيادية وربط نفيس">Sovereign Saudi Cloud & NPHIES</h3>
+        <p data-en="Production roadmap replaces external API calls with on-premise / SDAIA-compliant sovereign hosting inside KSA, hospital SSO/IAM authentication, and direct NPHIES / HIS HL7 integration." data-ar="تستبدل خارطة الإنتاج الاتصال الخارجي باستضافة سيادية داخل المملكة متوافقة مع سدايا (SDAIA)، وتوثيق دخول الممارسين الصحيين، والربط المباشر مع نفيس وأنظمة المستشفى.">Production roadmap replaces external API calls with on-premise / SDAIA-compliant sovereign hosting inside KSA, hospital SSO/IAM authentication, and direct NPHIES / HIS HL7 integration.</p>
+      </article>
+    </div>
+
+    <article class="glass card">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow" data-en="End-to-End Information Pathway" data-ar="مسار المعلومات المتكامل">End-to-End Information Pathway</p>
+          <h2 data-en="From ED Entrance Kiosk to Clinician Handover" data-ar="من كشك استقبال الطوارئ إلى تسليم الطبيب">From ED Entrance Kiosk to Clinician Handover</h2>
+        </div>
+        <span class="badge demo" data-en="FHIR R4 & NPHIES Profile Ready" data-ar="جاهز لملفات تعريف FHIR R4 ونفيس">FHIR R4 & NPHIES Profile Ready</span>
+      </div>
+      <div class="architecture">
+        <div>
+          <b data-en="1. Patient Kiosk (AR/EN)" data-ar="١. كشك المريض (عربي/إنجليزي)">1. Patient Kiosk (AR/EN)</b>
+          <span data-en="Voice capture + pain scale + QR zone ticket" data-ar="التقاط الصوت + مقياس الألم + تذكرة المسار">Voice capture + pain scale + QR zone ticket</span>
+        </div>
+        <div>
+          <b data-en="2. AI Speech & Structuring" data-ar="٢. التفريغ والهيكلة الذكية">2. AI Speech & Structuring</b>
+          <span data-en="OpenAI Whisper STT + follow-ups & safety floor" data-ar="تفريغ Whisper + أسئلة توضيحية وصمام أمان">OpenAI Whisper STT + follow-ups & safety floor</span>
+        </div>
+        <div>
+          <b data-en="3. Live Triage Dashboard" data-ar="٣. لوحة الفرز الفورية">3. Live Triage Dashboard</b>
+          <span data-en="Real-time SSE queue + zone load & clinician review" data-ar="طابور لحظي + توزيع المناطق ومراجعة الطبيب">Real-time SSE queue + zone load & clinician review</span>
+        </div>
+        <div>
+          <b data-en="4. EMR / FHIR R4 Export" data-ar="٤. تصدير السجل الطبي FHIR R4">4. EMR / FHIR R4 Export</b>
+          <span data-en="LOINC-coded Observations + attested Composition bundle" data-ar="قياسات بترميز LOINC + حزمة موثقة">LOINC-coded Observations + attested Composition bundle</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="glass card" style="margin-top:22px">
+      <div class="panel-head">
+        <div>
+          <h2 data-en="Demo data controls" data-ar="التحكم في البيانات التجريبية">Demo data controls</h2>
+          <p class="helper" data-en="Manage synthetic encounters across the local server and browser storage. Use fictional data only." data-ar="إدارة السجلات الوهمية عبر الخادم المحلي والمتصفح. استخدم بيانات وهمية فقط.">Manage synthetic encounters across the local server and browser storage. Use fictional data only.</p>
+        </div>
+        <div class="row">
+          <button id="restore-demo" class="btn cyan" data-en="Load seed patients" data-ar="تحميل مرضى تجريبيين">Load seed patients</button>
+          <button id="clear-data" class="btn danger" data-en="Clear Demo Data" data-ar="مسح البيانات التجريبية">Clear Demo Data</button>
+        </div>
+      </div>
+      <p id="storage-detail" class="helper"></p>
+    </article>
+  </section>
+</main>
+
+<footer>
+  <span>© 2026 MedFlow AI · SYHF MEDATHON JEDDAH MVP</span>
+  <div class="row">
+    <span data-en="PDPL-Aware Prototype Design" data-ar="تصميم يراعي حماية البيانات الشخصية">PDPL-Aware Prototype Design</span>
+    <span>·</span>
+    <span data-en="FHIR R4 Demo Interoperability" data-ar="تكامل FHIR R4 تجريبي">FHIR R4 Demo Interoperability</span>
+    <span>·</span>
+    <span data-en="Not for clinical use" data-ar="غير مخصص للاستخدام السريري">Not for clinical use</span>
+  </div>
+</footer>
+
+<!-- DIALOG 1: CLINICIAN ROLE -->
+<dialog id="role-dialog" class="dialog-small">
+  <div class="dialog-head">
+    <div>
+      <p class="eyebrow" data-en="Role separation demonstration" data-ar="عرض فصل الأدوار">Role separation demonstration</p>
+      <h2 data-en="Enter clinician workspace" data-ar="الدخول لمساحة الطبيب">Enter clinician workspace</h2>
+    </div>
+    <button class="btn compact" data-close="role-dialog" aria-label="Close">×</button>
+  </div>
+  <p class="subtitle" data-en="This gates access to full synthetic IDs, urgency overrides, and FHIR R4 exports." data-ar="يتيح هذا الدور الوصول للهويات الوهمية الكاملة، وتعديل الأولوية، وتصدير ملفات FHIR R4.">This gates access to full synthetic IDs, urgency overrides, and FHIR R4 exports.</p>
+  <label class="field" style="margin-top:18px">
+    <span data-en="Reviewer display name" data-ar="اسم المراجع الظاهر">Reviewer display name</span>
+    <input id="reviewer-name" maxlength="80" value="Dr. Al-Ghamdi (Jeddah ED)">
+  </label>
+  <button id="enter-role" class="btn primary full" data-en="Enter as demo clinician" data-ar="الدخول كطبيب تجريبي">Enter as demo clinician</button>
+</dialog>
+
+<!-- DIALOG 2: OPENAI & SPEECH ENGINE CONFIG -->
+<dialog id="ai-dialog" class="dialog-small">
+  <div class="dialog-head">
+    <div>
+      <p class="eyebrow" data-en="OpenAI Whisper & Clinical NLP Engine" data-ar="إعدادات محرك OpenAI الصوتي والسريري">OpenAI Whisper & Clinical NLP Engine</p>
+      <h2 data-en="AI Transcription & Structuring Settings" data-ar="إعدادات التفريغ الصوتي والهيكلة الذكية">AI Transcription & Structuring Settings</h2>
+    </div>
+    <button class="btn compact" data-close="ai-dialog" aria-label="Close">×</button>
+  </div>
+  <p class="subtitle" data-en="Connect your OpenAI API key to use gpt-4o-mini-transcribe (Whisper) for microphone audio and gpt-4o-mini for bilingual clinical extraction. Without a key, MedFlow automatically falls back to Browser Live Speech Recognition + Deterministic Bilingual NLP." data-ar="أدخل مفتاح OpenAI API لتفعيل تفريغ الصوت عبر gpt-4o-mini-transcribe (Whisper) والهيكلة الثنائية عبر gpt-4o-mini. في حال عدم إدخال مفتاح، يعمل النظام تلقائياً بالتعرف الصوتي للمتصفح والمحلل السريري المحلي.">Connect your OpenAI API key to use gpt-4o-mini-transcribe (Whisper) for microphone audio and gpt-4o-mini for bilingual clinical extraction. Without a key, MedFlow automatically falls back to Browser Live Speech Recognition + Deterministic Bilingual NLP.</p>
+  <label class="field" style="margin-top:16px">
+    <span data-en="OpenAI API Key (optional · starts with sk-)" data-ar="مفتاح OpenAI API (اختياري · يبدأ بـ sk-)">OpenAI API Key (optional · starts with sk-)</span>
+    <input id="openai-key-input" type="password" autocomplete="off" placeholder="sk-proj-..." dir="ltr">
+    <small id="ai-config-hint" data-en="Sent to your local MedFlow backend (or used in-memory for this session). Never stored in public repos." data-ar="يُرسل إلى خادم MedFlow المحلي فقط خلال هذه الجلسة.">Sent to your local MedFlow backend (or used in-memory for this session). Never stored in public repos.</small>
+  </label>
+  <div class="row" style="margin-top:18px">
+    <button id="save-ai-key" class="btn primary" type="button" data-en="Save AI Settings" data-ar="حفظ الإعدادات">Save AI Settings</button>
+    <button id="clear-ai-key" class="btn subtle" type="button" data-en="Use Local Fallback Mode" data-ar="استخدام الوضع المحلي البديل">Use Local Fallback Mode</button>
+  </div>
+</dialog>
+
+<!-- DIALOG 3: FHIR R4 PREVIEW -->
+<dialog id="fhir-dialog">
+  <div class="dialog-head">
+    <div>
+      <p class="eyebrow">FHIR R4 · 4.0.1 (NPHIES-Aligned Bundle)</p>
+      <h2 data-en="FHIR document preview" data-ar="معاينة مستند FHIR">FHIR document preview</h2>
+    </div>
+    <button class="btn compact" data-close="fhir-dialog" aria-label="Close">×</button>
+  </div>
+  <span class="badge amber" data-en="DEMO ONLY — not transmitted to a hospital" data-ar="عرض تجريبي فقط — لا يُرسل إلى مستشفى">DEMO ONLY — not transmitted to a hospital</span>
+  <p id="fhir-summary" class="helper"></p>
+  <pre id="fhir-json" tabindex="0"></pre>
+  <div class="row">
+    <button id="copy-json" class="btn cyan" data-en="Copy JSON" data-ar="نسخ JSON">Copy JSON</button>
+    <button id="download-json" class="btn primary" data-en="Download JSON" data-ar="تنزيل JSON">Download JSON</button>
+  </div>
+  <p class="helper" data-en="Real JSON document generation. Hospital transmission, NHIC certification and clinical validation are not implemented." data-ar="إنشاء فعلي لمستند JSON. لم يُنفذ الإرسال للمستشفى أو اعتماد NHIC أو التحقق السريري.">Real JSON document generation. Hospital transmission, NHIC certification and clinical validation are not implemented.</p>
+</dialog>
+
+<!-- DIALOG 4: CLEAR DATA -->
+<dialog id="clear-dialog" class="dialog-small">
+  <h2 data-en="Clear fictional demo records?" data-ar="مسح السجلات التجريبية الوهمية؟">Clear fictional demo records?</h2>
+  <p class="subtitle" data-en="This clears MedFlow's synthetic queue and audit history. You can load seed scenarios again." data-ar="يمسح هذا طابور MedFlow الوهمي وسجل التدقيق. يمكنك تحميل السيناريوهات التجريبية مجدداً.">This clears MedFlow's synthetic queue and audit history. You can load seed scenarios again.</p>
+  <div class="row" style="margin-top:20px">
+    <button id="confirm-clear" class="btn danger" data-en="Clear Demo Data" data-ar="مسح البيانات التجريبية">Clear Demo Data</button>
+    <button class="btn" data-close="clear-dialog" data-en="Cancel" data-ar="إلغاء">Cancel</button>
+  </div>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+/* MedFlow AI — Shared Clinical Intake Core (Browser + Node.js Isomorphic)
+ * Built for SYHF MEDATHON (Jeddah) · Tracks: Crowd & Patient Flow + Digital Transformation
+ * Safety Principle: Deterministic red-flag & vitals rules act as a hard safety floor.
+ * AI structuring can elevate urgency or enrich bilingual SOAP handover, never downgrade red flags.
+ */
+(function (root) {
+  'use strict';
+
+  const ARABIC_STATEMENT =
+    'أعاني من ألم شديد وضغط في منتصف الصدر يمتد إلى الكتف الأيسر مع ضيق في التنفس وتعرق منذ ٤٥ دقيقة. لدي سكري وضغط وآخذ ميتفورمين وأسبرين، ولدي حساسية من البنسلين';
+
+  const SCENARIOS = {
+    acs: {
+      id: 'acs',
+      labelEn: '1 · Acute Chest Pain & Dyspnea (Red Flag · Arabic)',
+      labelAr: '١ · ألم صدر حاد وضيق تنفس (إنذار فوري · عربي)',
+      name: 'DEMO · Patient Atlas (Jeddah ED)',
+      nid: '1000007788',
+      age: 54,
+      sex: 'male',
+      complaint: ARABIC_STATEMENT,
+      allergies: 'بنسلين (Penicillin)',
+      medications: 'ميتفورمين 500mg، أسبرين 81mg (Metformin, Aspirin)',
+      history: 'السكري من النوع الثاني، ارتفاع ضغط الدم (Type 2 DM, HTN)',
+      vitals: { hr: 114, sbp: 158, dbp: 94, spo2: 91, temp: 37.1, rr: 24, pain: 9 },
+      doorToIntakeSec: 42
+    },
+    umrah_asthma: {
+      id: 'umrah_asthma',
+      labelEn: '2 · Umrah Visitor Acute Wheezing (Red Flag · Arabic)',
+      labelAr: '٢ · زائر عمرة — نوبة ربو وضيق تنفس (إنذار فوري)',
+      name: 'DEMO · Pilgrim Al-Harbi',
+      nid: '2000005519',
+      age: 62,
+      sex: 'female',
+      complaint:
+        'عندي كتمة شديدة في النفس وصفير في الصدر منذ ساعتين بعد انتهاء بخاخ الفينتولين. لا يوجد ألم في الصدر. لدي تاريخ ربو مزمن ولا توجد حساسية معروفة.',
+      allergies: 'لا توجد حساسية معروفة (NKDA)',
+      medications: 'بخاخ فينتولين (سالبوتامول / Salbutamol inhaler)',
+      history: 'ربو شعبي مزمن (Bronchial Asthma)',
+      vitals: { hr: 118, sbp: 136, dbp: 84, spo2: 90, temp: 36.9, rr: 28, pain: 4 },
+      doorToIntakeSec: 38
+    },
+    peds_fever: {
+      id: 'peds_fever',
+      labelEn: '3 · High Fever & Persistent Vomiting (Priority · Bilingual)',
+      labelAr: '٣ · حمى شديدة وقيء متكرر (أولوية · ثنائي اللغة)',
+      name: 'DEMO · Patient Rayyan',
+      nid: '1000009123',
+      age: 19,
+      sex: 'male',
+      complaint:
+        'حمى شديدة منذ يومين وصلت 39.4 مع قيء متكرر وألم في البطن بعد الأكل ودوخة خفيفة. لا أعاني من ألم في الصدر أو ضيق في التنفس. آخذ باراسيتامول فقط.',
+      allergies: 'سلفا (Sulfa drugs)',
+      medications: 'باراسيتامول عند اللزوم (Paracetamol PRN)',
+      history: 'لا يوجد تاريخ مرضي مزمن (None)',
+      vitals: { hr: 104, sbp: 112, dbp: 72, spo2: 98, temp: 39.4, rr: 19, pain: 6 },
+      doorToIntakeSec: 51
+    },
+    trauma_ankle: {
+      id: 'trauma_ankle',
+      labelEn: '4 · Minor Sports Ankle Sprain (Standard · English/Arabic)',
+      labelAr: '٤ · التواء كاحل رياضي بسيط (اعتيادي)',
+      name: 'DEMO · Patient Olive',
+      nid: '2000001287',
+      age: 26,
+      sex: 'male',
+      complaint:
+        'Minor right ankle sprain after playing football in North Obhur 2 hours ago. Mild swelling over lateral ankle, able to bear some weight. Denies chest pain, shortness of breath, or head injury.',
+      allergies: 'Not provided',
+      medications: 'Ibuprofen 400mg once today',
+      history: 'Healthy, no chronic conditions',
+      vitals: { hr: 78, sbp: 122, dbp: 78, spo2: 99, temp: 36.7, rr: 15, pain: 4 },
+      doorToIntakeSec: 35
+    }
+  };
+
+  const QUICK_SYMPTOMS = [
+    {
+      id: 'chest',
+      labelEn: '🫀 Chest Pain',
+      labelAr: '🫀 ألم في الصدر',
+      textEn: 'I have chest pain and pressure',
+      textAr: 'أعاني من ألم وضغط في الصدر'
+    },
+    {
+      id: 'breathing',
+      labelEn: '🫁 Shortness of Breath',
+      labelAr: '🫁 ضيق في التنفس',
+      textEn: 'shortness of breath and difficulty breathing',
+      textAr: 'ضيق وصعوبة في التنفس'
+    },
+    {
+      id: 'fever',
+      labelEn: '🌡️ High Fever',
+      labelAr: '🌡️ حمى وارتفاع حرارة',
+      textEn: 'high fever and body aches',
+      textAr: 'حمى شديدة وارتفاع في درجة الحرارة'
+    },
+    {
+      id: 'abdomen',
+      labelEn: '🤢 Abdominal Pain / Vomiting',
+      labelAr: '🤢 ألم بطن / قيء',
+      textEn: 'abdominal pain and nausea/vomiting',
+      textAr: 'ألم في البطن مع غثيان وقيء'
+    },
+    {
+      id: 'neuro',
+      labelEn: '🧠 Headache / Dizziness',
+      labelAr: '🧠 صداع / دوخة',
+      textEn: 'severe headache and dizziness',
+      textAr: 'صداع شديد مع دوخة'
+    },
+    {
+      id: 'limb',
+      labelEn: '🦴 Sprain / Minor Injury',
+      labelAr: '🦴 التواء / إصابة بسيطة',
+      textEn: 'minor limb sprain and localized swelling, no chest pain',
+      textAr: 'التواء بسيط في الطرف مع تورم موضعي، ولا أعاني من ألم في الصدر'
+    }
+  ];
+
+  const limits = {
+    hr: [20, 250],
+    sbp: [40, 260],
+    dbp: [20, 180],
+    spo2: [30, 100],
+    temp: [30, 45],
+    rr: [3, 80],
+    pain: [0, 10]
+  };
+
+  const vitalSpec = {
+    hr: ['Heart rate', 'النبض', '8867-4', '/min'],
+    sbp: ['Systolic BP', 'الضغط الانقباضي', '8480-6', 'mm[Hg]'],
+    dbp: ['Diastolic BP', 'الضغط الانبساطي', '8462-4', 'mm[Hg]'],
+    spo2: ['SpO₂', 'تشبع الأكسجين', '59408-5', '%'],
+    temp: ['Temperature', 'درجة الحرارة', '8310-5', 'Cel'],
+    rr: ['Respiratory rate', 'معدل التنفس', '9279-1', '/min'],
+    pain: ['Pain score', 'درجة الألم', '72514-3', '{score}']
+  };
+
+  const text = (v, max = 3000) =>
+    String(v ?? '')
+      .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '')
+      .trim()
+      .slice(0, max);
+
+  const digits = (v) =>
+    String(v ?? '').replace(/[٠-٩۰-۹]/g, (c) =>
+      String(c.charCodeAt(0) - (c >= '۰' ? 1776 : 1632))
+    );
+
+  const uid = () =>
+    root.crypto?.randomUUID?.() ||
+    'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = Math.floor(Math.random() * 16);
+      return (c === 'x' ? r : (r & 3) | 8).toString(16);
+    });
+
+  function buildDefaultFollowups(norm, hasDuration, hasChest, negChest, hasFever, hasAllergy) {
+    const list = [];
+    if (!hasDuration) {
+      list.push({
+        label_en: '+ Started < 1 hour ago?',
+        label_ar: '+ بدأ منذ أقل من ساعة؟',
+        append_en: 'Started less than 1 hour ago.',
+        append_ar: 'بدأت الأعراض منذ أقل من ساعة.'
+      });
+    }
+    if (hasChest && !/left\s+(?:arm|shoulder)|الكتف الايسر|الذراع الايسر/.test(norm)) {
+      list.push({
+        label_en: '+ Radiates to left arm/jaw?',
+        label_ar: '+ يمتد للذراع الأيسر أو الفك؟',
+        append_en: 'Pain radiates to the left arm and shoulder.',
+        append_ar: 'يمتد الألم إلى الكتف والذراع الأيسر.'
+      });
+    }
+    if (!hasChest && !negChest) {
+      list.push({
+        label_en: '− Confirm no chest pain / SOB',
+        label_ar: '− تأكيد عدم وجود ألم صدر أو ضيق تنفس',
+        append_en: 'Denies chest pain or shortness of breath.',
+        append_ar: 'لا أعاني من ألم في الصدر أو ضيق في التنفس.'
+      });
+    }
+    if (!hasFever) {
+      list.push({
+        label_en: '+ Associated with fever?',
+        label_ar: '+ هل يصاحبه حمى؟',
+        append_en: 'Associated with fever and chills.',
+        append_ar: 'يصاحبه حمى وارتفاع في الحرارة.'
+      });
+    }
+    if (!hasAllergy) {
+      list.push({
+        label_en: '− No known drug allergies (NKDA)',
+        label_ar: '− لا توجد حساسية للأدوية',
+        append_en: 'No known drug allergies.',
+        append_ar: 'لا توجد حساسية معروفة للأدوية.'
+      });
+    }
+    return list.slice(0, 3);
+  }
+
+  function localStructure(complaintRaw, existing = {}) {
+    const raw = text(complaintRaw, 3000);
+    if (!raw) return null;
+    const norm = digits(raw)
+      .toLowerCase()
+      .normalize('NFKC')
+      .replace(/[ًٌٍَُِّْـ]/g, '')
+      .replace(/[أإآ]/g, 'ا');
+
+    const isArabic = /[\u0600-\u06FF]/.test(raw);
+    const positivesEn = [];
+    const positivesAr = [];
+    const negativesEn = [];
+    const negativesAr = [];
+
+    const negChest =
+      /\b(?:no|denies|without)\s+(?:chest\s+(?:pain|pressure))\b/i.test(norm) ||
+      /(?:لا اعاني من|لا يوجد|بدون)\s+(?:الم في الصدر|وجع في الصدر)/.test(norm);
+    const negSob =
+      /\b(?:no|denies|without)\s+(?:shortness of breath|difficulty breathing)\b/i.test(norm) ||
+      /(?:لا اعاني من|لا يوجد|بدون)\s+(?:ضيق في التنفس|صعوبه في التنفس|كتمه)/.test(norm);
+    const negBleed =
+      /\b(?:no|denies|without)\s+(?:bleeding|head injury|loss of consciousness)\b/i.test(norm) ||
+      /(?:لا يوجد|بدون)\s+(?:نزيف|فقدان وعي)/.test(norm);
+
+    if (negChest) {
+      negativesEn.push('No chest pain');
+      negativesAr.push('ينفي ألم الصدر');
+    }
+    if (negSob) {
+      negativesEn.push('No shortness of breath');
+      negativesAr.push('ينفي ضيق التنفس');
+    }
+    if (negBleed) {
+      negativesEn.push('No bleeding / LOC');
+      negativesAr.push('ينفي النزيف أو فقدان الوعي');
+    }
+
+    const hasChest =
+      !negChest &&
+      (/chest\s*(?:pain|pressure|tightness)/i.test(norm) ||
+        /الم.{0,16}صدر|ضغط.{0,16}صدر|وجع.{0,16}صدر/.test(norm));
+    if (hasChest) {
+      positivesEn.push('Chest pain / pressure');
+      positivesAr.push('ألم / ضغط في الصدر');
+    }
+    if (
+      !negSob &&
+      (/shortness of breath|difficulty breathing|wheez|dyspnea|can't breathe/i.test(norm) ||
+        /ضيق.{0,12}تنفس|صعوبه.{0,12}تنفس|كتمه|صفير/.test(norm))
+    ) {
+      positivesEn.push('Shortness of breath / dyspnea');
+      positivesAr.push('ضيق في التنفس / كتمة');
+    }
+    if (/left\s+(?:arm|shoulder)|radiat/i.test(norm) || /الكتف الايسر|الذراع الايسر|يمتد/.test(norm)) {
+      positivesEn.push('Radiation to left shoulder/arm');
+      positivesAr.push('امتداد الألم للكتف/الذراع الأيسر');
+    }
+    if (/sweat|diaphores/i.test(norm) || /تعرق|عرق/.test(norm)) {
+      positivesEn.push('Diaphoresis (sweating)');
+      positivesAr.push('تعرق مصاحب');
+    }
+    const hasFever = /fever|temperature|chills/i.test(norm) || /حمى|حراره|سخونه/.test(norm);
+    if (hasFever) {
+      positivesEn.push('Fever');
+      positivesAr.push('ارتفاع درجة الحرارة / حمى');
+    }
+    if (/vomit|nausea/i.test(norm) || /قيء|استفراغ|غثيان/.test(norm)) {
+      positivesEn.push('Vomiting / nausea');
+      positivesAr.push('قيء / غثيان');
+    }
+    if (/abdominal|stomach/i.test(norm) || /بطن|معده/.test(norm)) {
+      positivesEn.push('Abdominal pain');
+      positivesAr.push('ألم في البطن');
+    }
+    if (/dizz|lightheaded|headache/i.test(norm) || /دوخه|دوار|صداع/.test(norm)) {
+      positivesEn.push('Headache / dizziness');
+      positivesAr.push('صداع / دوخة');
+    }
+    if (/ankle|sprain|swell|limb/i.test(norm) || /كاحل|التواء|تورم|طرف/.test(norm)) {
+      positivesEn.push('Limb sprain / localized swelling');
+      positivesAr.push('إصابة طرفية / تورم موضعي');
+    }
+
+    let durationEn = 'Not specified';
+    let durationAr = 'غير محدد';
+    const minMatch = norm.match(/(\d+)\s*(?:minute|min|دقيقه|دقائق)/i);
+    const hrMatch = norm.match(/(\d+|ساعتين|ساعه)\s*(?:hour|hr|ساعه|ساعات|ساعتين)?/i);
+    const dayMatch = norm.match(/(\d+|يومين|يوم)\s*(?:day|days|يوم|ايام|يومين)?/i);
+    if (minMatch) {
+      durationEn = `${minMatch[1]} minutes`;
+      durationAr = `${minMatch[1]} دقيقة`;
+    } else if (/اقل من ساعه|less than 1 hour/i.test(norm)) {
+      durationEn = '< 1 hour';
+      durationAr = 'أقل من ساعة';
+    } else if (/ساعتين|2\s*hours/i.test(norm)) {
+      durationEn = '2 hours';
+      durationAr = 'ساعتان';
+    } else if (hrMatch && /\d+/.test(hrMatch[1])) {
+      durationEn = `${hrMatch[1]} hour(s)`;
+      durationAr = `${hrMatch[1]} ساعة`;
+    } else if (/يومين|two\s*days|2\s*days/i.test(norm)) {
+      durationEn = '2 days';
+      durationAr = 'يومان';
+    } else if (dayMatch && /\d+/.test(dayMatch[1])) {
+      durationEn = `${dayMatch[1]} day(s)`;
+      durationAr = `${dayMatch[1]} يوم`;
+    }
+
+    let extractedAllergies = existing.allergies || '';
+    if (!extractedAllergies) {
+      if (/penicillin|بنسلين/.test(norm)) extractedAllergies = 'Penicillin (بنسلين)';
+      else if (/sulfa|سلفا/.test(norm)) extractedAllergies = 'Sulfa (سلفا)';
+      else if (/لا توجد حساسيه|بدون حساسيه|no known drug allerg|no allerg/i.test(norm))
+        extractedAllergies = 'No known allergies (لا توجد حساسية معروفة)';
+    }
+
+    const medsFound = [];
+    if (/metformin|ميتفورمين/.test(norm)) medsFound.push('Metformin (ميتفورمين)');
+    if (/aspirin|اسبرين/.test(norm)) medsFound.push('Aspirin (أسبرين)');
+    if (/ventolin|salbutamol|فينتولين|بخاخ/.test(norm))
+      medsFound.push('Salbutamol / Ventolin inhaler (بخاخ فينتولين)');
+    if (/paracetamol|panadol|باراسيتامول|بنادول/.test(norm))
+      medsFound.push('Paracetamol (باراسيتامول)');
+    if (/ibuprofen|ايبوبروفين|بروفين/.test(norm)) medsFound.push('Ibuprofen (إيبوبروفين)');
+    const extractedMedications = existing.medications || medsFound.join(', ');
+
+    const hxFound = [];
+    if (/diabet|سكري|سكر/.test(norm)) hxFound.push('Diabetes Mellitus (السكري)');
+    if (/hypertens|ضغط/.test(norm) && !/ضغط في منتصف الصدر|ضغط في الصدر/.test(norm))
+      hxFound.push('Hypertension (ارتفاع ضغط الدم)');
+    else if (/عندي ضغط|لدي سكري وضغط/.test(norm)) hxFound.push('Hypertension (ارتفاع ضغط الدم)');
+    if (/asthma|ربو/.test(norm)) hxFound.push('Bronchial Asthma (ربو شعبي)');
+    const extractedHistory = existing.history || hxFound.join(', ');
+
+    const summaryEn = positivesEn.length
+      ? `Patient reports: ${positivesEn.join(', ')}. Duration: ${durationEn}.${
+          negativesEn.length ? ' Pertinent negatives: ' + negativesEn.join(', ') + '.' : ''
+        }`
+      : isArabic
+      ? `Arabic intake captured (${raw.slice(0, 140)}). See verbatim statement and structured HPI below.`
+      : raw;
+
+    const summaryAr = positivesAr.length
+      ? `يفيد المريض بوجود: ${positivesAr.join('، ')}. المدة: ${durationAr}.${
+          negativesAr.length ? ' الأعراض المنفية: ' + negativesAr.join('، ') + '.' : ''
+        }`
+      : raw;
+
+    const followups = buildDefaultFollowups(
+      norm,
+      durationEn !== 'Not specified',
+      hasChest,
+      negChest,
+      hasFever,
+      Boolean(extractedAllergies)
+    );
+
+    return {
+      provider: 'local-clinical-nlp',
+      detected_language: isArabic ? 'ar' : 'en',
+      complaint_en: summaryEn,
+      complaint_ar: summaryAr,
+      hpi: {
+        duration_en: durationEn,
+        duration_ar: durationAr,
+        associated_en: positivesEn,
+        associated_ar: positivesAr,
+        negatives_en: negativesEn,
+        negatives_ar: negativesAr
+      },
+      extracted_allergies: extractedAllergies,
+      extracted_medications: extractedMedications,
+      extracted_history: extractedHistory,
+      followups,
+      ai_urgency: null,
+      ai_rationale_en: 'Deterministic rule-based clinical extraction',
+      ai_rationale_ar: 'استخلاص سريري قياسي مبني على القواعد'
+    };
+  }
+
+  function normalize(raw) {
+    const validSources = ['scenario', 'typed', 'voice-openai', 'voice-browser', 'voice-demo'];
+    const p = {
+      id: /^[a-z0-9-]{1,60}$/i.test(raw.id || '') ? raw.id : uid(),
+      name: text(raw.name, 100),
+      nid: digits(text(raw.nid, 10)),
+      age: raw.age === '' ? NaN : Number(digits(raw.age)),
+      sex: ['male', 'female', 'other', 'unknown'].includes(raw.sex) ? raw.sex : 'unknown',
+      complaint: text(raw.complaint),
+      allergies: text(raw.allergies, 500),
+      medications: text(raw.medications, 500),
+      history: text(raw.history, 1000),
+      source: validSources.includes(raw.source) ? raw.source : 'typed',
+      doorToIntakeSec:
+        Number.isFinite(Number(raw.doorToIntakeSec)) && Number(raw.doorToIntakeSec) > 0
+          ? Math.min(3600, Math.round(Number(raw.doorToIntakeSec)))
+          : 42,
+      createdAt: isFinite(Date.parse(raw.createdAt))
+        ? new Date(raw.createdAt).toISOString()
+        : new Date().toISOString(),
+      vitals: {},
+      measuredVitals: {},
+      structured: null,
+      review: null
+    };
+    for (const key of Object.keys(limits)) {
+      for (const [field, from] of [
+        ['vitals', raw.vitals],
+        ['measuredVitals', raw.measuredVitals]
+      ]) {
+        const val = from?.[key];
+        if (val !== '' && val !== null && val !== undefined) {
+          const n = Number(digits(val));
+          if (Number.isFinite(n) && n >= limits[key][0] && n <= limits[key][1]) p[field][key] = n;
+        }
+      }
+    }
+    if (raw.structured && typeof raw.structured === 'object') {
+      const fallbackFollowups =
+        Array.isArray(raw.structured.followups) && raw.structured.followups.length
+          ? raw.structured.followups.slice(0, 4).map((f) => ({
+              label_en: text(f.label_en, 80),
+              label_ar: text(f.label_ar, 80),
+              append_en: text(f.append_en, 200),
+              append_ar: text(f.append_ar, 200)
+            }))
+          : (localStructure(p.complaint, p)?.followups || []);
+      p.structured = {
+        provider: text(raw.structured.provider || 'local-clinical-nlp', 60),
+        detected_language: text(raw.structured.detected_language || 'auto', 15),
+        complaint_en: text(raw.structured.complaint_en, 2000),
+        complaint_ar: text(raw.structured.complaint_ar, 2000),
+        hpi: {
+          duration_en: text(raw.structured.hpi?.duration_en || 'Not specified', 200),
+          duration_ar: text(raw.structured.hpi?.duration_ar || 'غير محدد', 200),
+          associated_en: Array.isArray(raw.structured.hpi?.associated_en)
+            ? raw.structured.hpi.associated_en.slice(0, 12).map((x) => text(x, 120))
+            : [],
+          associated_ar: Array.isArray(raw.structured.hpi?.associated_ar)
+            ? raw.structured.hpi.associated_ar.slice(0, 12).map((x) => text(x, 120))
+            : [],
+          negatives_en: Array.isArray(raw.structured.hpi?.negatives_en)
+            ? raw.structured.hpi.negatives_en.slice(0, 12).map((x) => text(x, 120))
+            : [],
+          negatives_ar: Array.isArray(raw.structured.hpi?.negatives_ar)
+            ? raw.structured.hpi.negatives_ar.slice(0, 12).map((x) => text(x, 120))
+            : []
+        },
+        extracted_allergies: text(raw.structured.extracted_allergies, 400),
+        extracted_medications: text(raw.structured.extracted_medications, 400),
+        extracted_history: text(raw.structured.extracted_history, 600),
+        followups: fallbackFollowups,
+        ai_urgency: ['immediate', 'priority', 'standard', 'unclassified'].includes(
+          raw.structured.ai_urgency
+        )
+          ? raw.structured.ai_urgency
+          : null,
+        ai_rationale_en: text(raw.structured.ai_rationale_en, 600),
+        ai_rationale_ar: text(raw.structured.ai_rationale_ar, 600)
+      };
+    } else if (p.complaint) {
+      p.structured = localStructure(p.complaint, p);
+    }
+
+    if (
+      raw.review &&
+      ['immediate', 'priority', 'standard', 'unclassified'].includes(raw.review.urgency)
+    ) {
+      p.review = {
+        urgency: raw.review.urgency,
+        comment: text(raw.review.comment, 1500),
+        confirmed: raw.review.confirmed === true,
+        reviewer: text(raw.review.reviewer || 'Demo Clinician', 80),
+        at: isFinite(Date.parse(raw.review.at))
+          ? new Date(raw.review.at).toISOString()
+          : p.createdAt
+      };
+    }
+    return p;
+  }
+
+  function validate(raw) {
+    const e = [];
+    if (!text(raw.name, 100)) e.push('name');
+    if (!/^[12][0-9]{9}$/.test(digits(raw.nid))) e.push('nid');
+    if (
+      raw.age === '' ||
+      !Number.isInteger(Number(digits(raw.age))) ||
+      Number(digits(raw.age)) < 0 ||
+      Number(digits(raw.age)) > 120
+    )
+      e.push('age');
+    if (!text(raw.complaint)) e.push('complaint');
+    for (const [k, [min, max]] of Object.entries(limits)) {
+      const v = raw.vitals?.[k];
+      if (
+        v !== '' &&
+        v !== undefined &&
+        v !== null &&
+        (!Number.isFinite(Number(digits(v))) || Number(digits(v)) < min || Number(digits(v)) > max)
+      )
+        e.push(k);
+    }
+    if (
+      Boolean(raw.vitals?.sbp !== '' && raw.vitals?.sbp != null) !==
+      Boolean(raw.vitals?.dbp !== '' && raw.vitals?.dbp != null)
+    )
+      e.push('bp');
+    if (Number(raw.vitals?.dbp) >= Number(raw.vitals?.sbp) && raw.vitals?.sbp) e.push('bp');
+    return [...new Set(e)];
+  }
+
+  function flag(p) {
+    let s = text(p.complaint)
+      .toLowerCase()
+      .normalize('NFKC')
+      .replace(/[ًٌٍَُِّْـ]/g, '')
+      .replace(/[أإآ]/g, 'ا');
+    const terms = [
+      /chest\s+(?:pain|pressure|tightness)/i,
+      /shortness of breath|difficulty breathing|cannot breathe|can't breathe|severe wheez/i,
+      /heavy bleeding|severe bleeding|unconscious|passed out|stroke|facial droop|slurred speech/i,
+      /الم.{0,16}صدر|ضغط.{0,16}صدر|وجع.{0,16}صدر|ضيق.{0,12}تنفس|صعوبه.{0,12}تنفس|كتمه شديده|نزيف شديد|فقدان الوعي|سكته|تدلي الوجه/
+    ];
+    s = s
+      .replace(
+        /\b(?:no|denies|without)\s+(?:chest\s+(?:pain|pressure)|shortness of breath|difficulty breathing|heavy bleeding|severe bleeding|stroke symptoms)\b/g,
+        ''
+      )
+      .replace(
+        /(?:لا اعاني من|لا يوجد|بدون)\s+(?:الم في الصدر|ضيق في التنفس|نزيف شديد)/g,
+        ''
+      );
+    const red = terms.some((r) => r.test(s));
+    const v = { ...(p.vitals || {}), ...(p.measuredVitals || {}) };
+    const abnormal =
+      (v.spo2 != null && v.spo2 < 92) ||
+      (v.sbp != null && v.sbp < 90) ||
+      (v.hr != null && (v.hr < 50 || v.hr > 130)) ||
+      (v.rr != null && (v.rr < 8 || v.rr > 30)) ||
+      (v.temp != null && v.temp >= 40) ||
+      (v.pain != null && v.pain >= 9 && red);
+
+    if (red || abnormal) return { level: 'immediate', reason: red ? 'complaint' : 'vitals' };
+
+    let deterministicLevel = 'unclassified';
+    if (
+      /fever|vomit|abdominal pain|pain|dizz|headache|حمى|حراره|قيء|الم|دوخه|صداع/.test(s) ||
+      (v.temp != null && v.temp >= 38.5) ||
+      (v.pain != null && v.pain >= 7)
+    ) {
+      deterministicLevel = 'priority';
+    } else if (/ankle|sprain|minor|cough|cold|كاحل|التواء|زكام/.test(s)) {
+      deterministicLevel = 'standard';
+    }
+
+    const rank = { immediate: 3, priority: 2, standard: 1, unclassified: 0 };
+    const aiLevel = p.structured?.ai_urgency;
+    if (aiLevel && rank[aiLevel] > rank[deterministicLevel]) {
+      return { level: aiLevel, reason: 'ai-clinical' };
+    }
+    return {
+      level: deterministicLevel,
+      reason: deterministicLevel === 'unclassified' ? 'unknown' : 'complaint'
+    };
+  }
+
+  function routingTicket(p, queue = []) {
+    const level = p.review?.urgency || flag(p).level;
+    const numSeed = parseInt((p.nid || '104').slice(-3), 10) || 104;
+    const sameTierPending = queue.filter(
+      (item) => !item.review?.confirmed && flag(item).level === level && item.id !== p.id
+    ).length;
+
+    if (level === 'immediate') {
+      const code = 'E-' + String(100 + (numSeed % 89));
+      return {
+        code,
+        level,
+        color: 'red',
+        zoneEn: 'Zone A · Immediate Triage & Resuscitation Bay 1',
+        zoneAr: 'المنطقة أ · مسار الفرز الفوري والإنعاش (غرفة ١)',
+        waitEn: '0 min · Immediate Nurse Escort',
+        waitAr: '٠ دقيقة · مرافقة فورية لطاقم الطوارئ',
+        speechEn: `Emergency Ticket ${code}. Immediate human triage required. Please proceed directly to Zone A, Resuscitation and Triage Bay 1, or alert staff immediately.`,
+        speechAr: `تذكرة طوارئ رقم ${code}. يلزم فرز بشري فوري. يرجى التوجه فوراً إلى المنطقة ألف، غرفة الفرز الفوري رقم واحد، أو إبلاغ الطاقم الطبي الآن.`
+      };
+    }
+    if (level === 'priority' || level === 'unclassified') {
+      const code = 'P-' + String(200 + (numSeed % 89));
+      const estMins = Math.max(6, (sameTierPending + 1) * 7);
+      return {
+        code,
+        level,
+        color: 'amber',
+        zoneEn: 'Zone B · Acute Priority Assessment Bay',
+        zoneAr: 'المنطقة ب · مسار التقييم العاجل ذو الأولوية',
+        waitEn: `Queue #${sameTierPending + 1} · Est. ~${estMins} mins`,
+        waitAr: `الترتيب #${sameTierPending + 1} · الانتظار التقريبي ~${estMins} دقيقة`,
+        speechEn: `Priority Ticket ${code}. Please proceed to Zone B, Acute Priority Assessment waiting area. Your estimated wait time is ${estMins} minutes.`,
+        speechAr: `تذكرة أولوية رقم ${code}. يرجى التوجه إلى المنطقة باء، منطقة التقييم العاجل. وقت الانتظار التقريبي ${estMins} دقيقة.`
+      };
+    }
+    const code = 'S-' + String(300 + (numSeed % 89));
+    const estMins = Math.max(12, (sameTierPending + 1) * 11);
+    return {
+      code,
+      level,
+      color: 'green',
+      zoneEn: 'Zone C · Fast-Track Minor Care Clinic',
+      zoneAr: 'المنطقة ج · عيادة المسار السريع للحالات الاعتيادية',
+      waitEn: `Queue #${sameTierPending + 1} · Est. ~${estMins} mins`,
+      waitAr: `الترتيب #${sameTierPending + 1} · الانتظار التقريبي ~${estMins} دقيقة`,
+      speechEn: `Standard Fast-Track Ticket ${code}. Please proceed to Zone C, Fast-Track Clinic lounge. Your estimated wait time is ${estMins} minutes.`,
+      speechAr: `تذكرة المسار السريع رقم ${code}. يرجى التوجه إلى المنطقة جيم، استراحة المسار السريع. وقت الانتظار التقريبي ${estMins} دقيقة.`
+    };
+  }
+
+  function qrSvg(seedStr) {
+    // Generates a crisp 15x15 QR-style SVG matrix with standard finder patterns for the patient boarding ticket
+    const size = 15;
+    let hash = 2166136261;
+    const str = String(seedStr || 'MEDFLOW');
+    for (let i = 0; i < str.length; i++) {
+      hash ^= str.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    function isFinder(r, c) {
+      const inTL = r < 5 && c < 5;
+      const inTR = r < 5 && c >= size - 5;
+      const inBL = r >= size - 5 && c < 5;
+      if (!inTL && !inTR && !inBL) return null;
+      const lr = r >= size - 5 ? r - (size - 5) : r;
+      const lc = c >= size - 5 ? c - (size - 5) : c;
+      if (lr === 0 || lr === 4 || lc === 0 || lc === 4) return true;
+      if (lr === 2 && lc === 2) return true;
+      return false;
+    }
+    let rects = '';
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        const f = isFinder(r, c);
+        let on = false;
+        if (f !== null) {
+          on = f;
+        } else {
+          hash ^= (r * 31 + c * 17) & 0xff;
+          hash = Math.imul(hash, 16777619);
+          on = (Math.abs(hash) + r + c) % 2 === 0;
+        }
+        if (on) {
+          rects += `<rect x="${c + 1}" y="${r + 1}" width="1" height="1" fill="#020617"/>`;
+        }
+      }
+    }
+    return `<svg viewBox="0 0 ${size + 2} ${size + 2}" width="84" height="84" style="background:#f8fafc;border-radius:8px;padding:3px;flex:none" aria-label="Ticket QR Code" role="img">${rects}</svg>`;
+  }
+
+  function soap(p, lang = 'en') {
+    const ar = lang === 'ar';
+    const unknown = ar ? 'غير مذكور' : 'Not provided';
+    const entered = Object.entries(p.vitals || {})
+      .map(([k, v]) => `${vitalSpec[k][ar ? 1 : 0]}: ${v} ${vitalSpec[k][3]}`)
+      .join(' · ');
+    const measured = Object.entries(p.measuredVitals || {})
+      .map(([k, v]) => `${vitalSpec[k][ar ? 1 : 0]}: ${v} ${vitalSpec[k][3]}`)
+      .join(' · ');
+
+    const st = p.structured || localStructure(p.complaint, p);
+    const translatedLine = st
+      ? ar
+        ? st.complaint_ar && st.complaint_ar !== p.complaint
+          ? `\n• الملخص السريري المهيكل (عربي): ${st.complaint_ar}`
+          : ''
+        : st.complaint_en && st.complaint_en !== p.complaint
+        ? `\n• Bilingual Clinical Handover (EN): ${st.complaint_en}`
+        : ''
+      : '';
+
+    const hpiExtras = [];
+    if (st?.hpi) {
+      const assoc = ar ? st.hpi.associated_ar : st.hpi.associated_en;
+      const negs = ar ? st.hpi.negatives_ar : st.hpi.negatives_en;
+      const dur = ar ? st.hpi.duration_ar : st.hpi.duration_en;
+      if (dur && dur !== 'Not specified' && dur !== 'غير محدد') {
+        hpiExtras.push(`${ar ? 'المدة' : 'Onset/Duration'}: ${dur}`);
+      }
+      if (assoc && assoc.length) {
+        hpiExtras.push(
+          `${ar ? 'الأعراض الإيجابية' : 'Pertinent Positives'}: ${assoc.join(ar ? '، ' : ', ')}`
+        );
+      }
+      if (Array.isArray(negs) && negs.length > 0) {
+        hpiExtras.push(
+          `${ar ? 'الأعراض المنفية' : 'Pertinent Negatives'}: ${negs.join(ar ? '، ' : ', ')}`
+        );
+      }
+    }
+
+    const f = flag(p);
+    const ticket = routingTicket(p);
+    const aiRationale = st ? (ar ? st.ai_rationale_ar : st.ai_rationale_en) : '';
+
+    return {
+      s:
+        `${ar ? 'إفادة المريض النصية: ' : 'Verbatim patient statement: '}"${p.complaint}"` +
+        translatedLine +
+        (hpiExtras.length ? `\n• ${hpiExtras.join(' | ')}` : '') +
+        `\n• ${ar ? 'العمر' : 'Age'}: ${p.age} | ${ar ? 'الحساسية' : 'Allergies'}: ${
+          p.allergies || unknown
+        } | ${ar ? 'الأدوية' : 'Medications'}: ${p.medications || unknown} | ${
+          ar ? 'التاريخ المرضي' : 'History'
+        }: ${p.history || unknown}` +
+        (entered
+          ? '\n• ' +
+            (ar
+              ? 'قيم أدخلها المريض ولم يتحقق منها الطبيب: '
+              : 'Patient-entered values, unverified: ') +
+            entered
+          : ''),
+      o: measured
+        ? (ar
+            ? 'قياسات أكدها الطبيب التجريبي: '
+            : 'Measurements confirmed by demo clinician: ') + measured
+        : ar
+        ? 'لم يُقيّم بعد. بانتظار قياس العلامات الحيوية من الطاقم السريري.'
+        : 'Not yet assessed. Pending clinician measurement of vital signs.',
+      a:
+        (f.level === 'immediate'
+          ? ar
+            ? 'عرض يحتمل وجود علامة إنذار حرجة. يلزم تقييم سريري فوري. لا يوجد تشخيص آلي.'
+            : 'Potential red-flag presentation. Immediate clinical assessment required. No automated diagnosis.'
+          : ar
+          ? 'الشكوى تتطلب تقييم الطبيب. لا يوجد تشخيص آلي.'
+          : 'Complaint requires clinician assessment. No automated diagnosis.') +
+        (aiRationale
+          ? `\n(${ar ? 'تحليل المساعد الذكي: ' : 'AI Intake Triage Note: '}${aiRationale})`
+          : ''),
+      p:
+        (f.level === 'immediate'
+          ? ar
+            ? 'إبلاغ ممرض الفرز أو طبيب الطوارئ فوراً وفق البروتوكول المحلي (مسار الطوارئ الحرجة). لا تنتظر هذا الكشك.'
+            : 'Escalate immediately to the emergency clinician or triage nurse according to local protocol (Fast-Track Resuscitation/Triage). Do not wait for this kiosk.'
+          : ar
+          ? 'التقييم بواسطة ممرض الفرز أو الطبيب وفق البروتوكول المحلي.'
+          : 'Assessment by a triage nurse or clinician according to local protocol.') +
+        `\n• ${ar ? 'توجيه المسار وتذكرة الانتظار' : 'Assigned ED Routing'}: [${ticket.code}] ${
+          ar ? ticket.zoneAr : ticket.zoneEn
+        }`
+    };
+  }
+
+  function seed() {
+    return [
+      normalize({
+        name: 'DEMO · Pilgrim Al-Harbi',
+        nid: '2000005519',
+        age: 62,
+        sex: 'female',
+        complaint:
+          'عندي كتمة شديدة في النفس وصفير في الصدر منذ ساعتين بعد انتهاء بخاخ الفينتولين. لا يوجد ألم في الصدر.',
+        allergies: 'لا توجد حساسية معروفة (NKDA)',
+        medications: 'بخاخ فينتولين (Salbutamol)',
+        history: 'ربو شعبي مزمن (Bronchial Asthma)',
+        vitals: { hr: 118, sbp: 136, dbp: 84, spo2: 90, temp: 36.9, rr: 28, pain: 4 },
+        doorToIntakeSec: 38,
+        source: 'scenario'
+      }),
+      normalize({
+        name: 'DEMO · Patient Cedar',
+        nid: '1000004412',
+        age: 29,
+        sex: 'male',
+        complaint: 'Fever and body aches for two days with mild abdominal pain after meals',
+        allergies: 'Not provided',
+        medications: 'Paracetamol 500mg',
+        history: 'None',
+        vitals: { temp: 39.1, hr: 98, spo2: 98, pain: 6 },
+        doorToIntakeSec: 49,
+        source: 'scenario'
+      }),
+      normalize({
+        name: 'DEMO · Patient Olive',
+        nid: '2000001287',
+        age: 26,
+        sex: 'male',
+        complaint:
+          'Minor right ankle sprain after football in North Obhur, mild swelling, no chest pain',
+        allergies: 'NKDA',
+        vitals: { hr: 78, sbp: 122, dbp: 78, spo2: 99, temp: 36.7, pain: 3 },
+        doorToIntakeSec: 35,
+        source: 'scenario'
+      })
+    ];
+  }
+
+  const escapeXML = (s) =>
+    text(s, 20000)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+
+  function fhir(p) {
+    const now = new Date().toISOString(),
+      sid = uid(),
+      pid = uid(),
+      eid = uid(),
+      aid = uid();
+    const ref = (id) => 'urn:uuid:' + id;
+    const meta = {
+      profile: ['http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/bundle|1.0.0'],
+      tag: [
+        {
+          system: 'https://medflow.example.org/tags',
+          code: 'synthetic-demo',
+          display: 'DEMO ONLY — SYHF MEDATHON Jeddah Prototype — not for clinical use'
+        }
+      ]
+    };
+    const patient = {
+      resourceType: 'Patient',
+      id: pid,
+      meta,
+      identifier: [{ system: 'https://medflow.example.org/synthetic-id', value: p.nid }],
+      name: [{ text: p.name }],
+      gender: p.sex,
+      extension: [
+        {
+          url: 'https://medflow.example.org/StructureDefinition/age-at-intake',
+          valueAge: { value: p.age, unit: 'years', system: 'http://unitsofmeasure.org', code: 'a' }
+        }
+      ]
+    };
+    const practitioner = {
+      resourceType: 'Practitioner',
+      id: aid,
+      meta,
+      name: [{ text: p.review?.reviewer || 'Demo Clinician' }]
+    };
+    const ticket = routingTicket(p);
+    const encounter = {
+      resourceType: 'Encounter',
+      id: eid,
+      meta,
+      status: 'in-progress',
+      class: {
+        system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
+        code: 'EMER',
+        display: 'emergency'
+      },
+      priority: {
+        coding: [
+          {
+            system: 'https://medflow.example.org/triage-urgency',
+            code: p.review?.urgency || flag(p).level
+          }
+        ]
+      },
+      location: [
+        {
+          location: {
+            display: `${ticket.code} · ${ticket.zoneEn}`
+          }
+        }
+      ],
+      subject: { reference: ref(pid) },
+      period: { start: p.createdAt }
+    };
+    const observations = [];
+    const available = { ...p.vitals, ...p.measuredVitals };
+    function obs(k, value) {
+      const id = uid(),
+        measured = Object.hasOwnProperty.call(p.measuredVitals, k);
+      const spec = vitalSpec[k];
+      const o = {
+        resourceType: 'Observation',
+        id,
+        meta,
+        status: measured ? 'final' : 'preliminary',
+        code: { coding: [{ system: 'http://loinc.org', code: spec[2], display: spec[0] }] },
+        subject: { reference: ref(pid) },
+        encounter: { reference: ref(eid) },
+        effectiveDateTime: measured ? p.review?.at || now : p.createdAt,
+        method: {
+          text: measured
+            ? 'Confirmed measured by demo clinician'
+            : 'Patient-entered value — unverified'
+        },
+        valueQuantity: {
+          value,
+          unit: spec[3],
+          system: 'http://unitsofmeasure.org',
+          code: spec[3]
+        }
+      };
+      observations.push(o);
+    }
+    Object.entries(available).forEach(([k, v]) => {
+      if (k !== 'sbp' && k !== 'dbp') obs(k, v);
+    });
+    if (available.sbp != null && available.dbp != null) {
+      const id = uid(),
+        measured = p.measuredVitals.sbp != null && p.measuredVitals.dbp != null;
+      observations.push({
+        resourceType: 'Observation',
+        id,
+        meta,
+        status: measured ? 'final' : 'preliminary',
+        code: {
+          coding: [{ system: 'http://loinc.org', code: '85354-9', display: 'Blood pressure panel' }]
+        },
+        subject: { reference: ref(pid) },
+        encounter: { reference: ref(eid) },
+        effectiveDateTime: measured ? p.review?.at || now : p.createdAt,
+        method: {
+          text: measured
+            ? 'Confirmed measured by demo clinician'
+            : 'Patient-entered value — unverified'
+        },
+        component: ['sbp', 'dbp'].map((k) => ({
+          code: {
+            coding: [{ system: 'http://loinc.org', code: vitalSpec[k][2], display: vitalSpec[k][0] }]
+          },
+          valueQuantity: {
+            value: available[k],
+            unit: 'mmHg',
+            system: 'http://unitsofmeasure.org',
+            code: 'mm[Hg]'
+          }
+        }))
+      });
+    }
+    const note = soap(p);
+    const noteAR = soap(p, 'ar');
+    const sections = [
+      ['Patient-reported information & AI Bilingual Handover', note.s, noteAR.s],
+      ['Objective — provenance retained', note.o, noteAR.o],
+      ['System suggestion — not a diagnosis', note.a, noteAR.a],
+      ['Human assessment plan & ED Zone Routing', note.p, noteAR.p],
+      [
+        'Clinician review',
+        p.review
+          ? `${p.review.reviewer} · ${p.review.urgency} · ${p.review.comment || 'No comment'} · ${p.review.at}`
+          : 'Not yet reviewed',
+        ''
+      ]
+    ].map(([title, en, ar]) => ({
+      title,
+      text: {
+        status: 'generated',
+        div:
+          '<div xmlns="http://www.w3.org/1999/xhtml"><p>' +
+          escapeXML(en) +
+          '</p>' +
+          (ar ? '<p dir="rtl">' + escapeXML(ar) + '</p>' : '') +
+          '</div>'
+      }
+    }));
+    if (observations.length)
+      sections.push({
+        title: 'Available values — check method and status',
+        entry: observations.map((o) => ({ reference: ref(o.id) }))
+      });
+    const comp = {
+      resourceType: 'Composition',
+      id: sid,
+      meta,
+      status: p.review?.confirmed ? 'final' : 'preliminary',
+      type: {
+        coding: [{ system: 'http://loinc.org', code: '34117-2', display: 'History and physical note' }]
+      },
+      subject: { reference: ref(pid) },
+      encounter: { reference: ref(eid) },
+      date: now,
+      author: [{ reference: ref(aid) }],
+      title: 'MedFlow synthetic intake — DEMO ONLY — not transmitted to a hospital',
+      section: sections
+    };
+    if (p.review?.confirmed)
+      comp.attester = [{ mode: 'professional', time: p.review.at, party: { reference: ref(aid) } }];
+    return {
+      resourceType: 'Bundle',
+      id: uid(),
+      meta,
+      identifier: { system: 'https://medflow.example.org/demo-documents', value: uid() },
+      type: 'document',
+      timestamp: now,
+      entry: [comp, patient, practitioner, encounter, ...observations].map((resource) => ({
+        fullUrl: ref(resource.id),
+        resource
+      }))
+    };
+  }
+
+  const exported = {
+    ARABIC_STATEMENT,
+    SCENARIOS,
+    QUICK_SYMPTOMS,
+    limits,
+    vitalSpec,
+    text,
+    digits,
+    uid,
+    localStructure,
+    normalize,
+    validate,
+    flag,
+    routingTicket,
+    qrSvg,
+    soap,
+    seed,
+    fhir,
+    escapeXML
+  };
+
+  root.MedFlow = exported;
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = exported;
+  }
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+</script>
+<script>
+/* MedFlow AI — SYHF MEDATHON Jeddah MVP Application Controller */
+(function () {
+  'use strict';
+
+  function boot() {
+    if (!window.MedFlow) {
+      setTimeout(boot, 30);
+      return;
+    }
+    const M = window.MedFlow,
+      $ = (id) => document.getElementById(id),
+      KEY = 'medflow.prototype.v2',
+      AI_KEY_STORAGE = 'medflow.session.openai_key';
+
+    const state = {
+      lang: 'en',
+      noteLang: 'en',
+      role: null,
+      queue: [],
+      audit: [],
+      selected: null,
+      last: null,
+      source: 'typed',
+      structured: null,
+      storage: true,
+      serverConnected: false,
+      aiConfigured: false,
+      clientOpenAIKey: sessionStorage.getItem(AI_KEY_STORAGE) || '',
+      view: 'kiosk',
+      fhir: null,
+      recording: false,
+      stream: null,
+      recorder: null,
+      speechRec: null,
+      liveSpeechTranscript: '',
+      audioURL: null,
+      timer: null,
+      pendingId: null,
+      formStartedAt: Date.now()
+    };
+
+    const T = (en, ar) => (state.lang === 'ar' ? ar : en);
+    const labels = {
+      immediate: ['Immediate human triage', 'فرز بشري فوري'],
+      priority: ['Priority assessment', 'تقييم ذو أولوية'],
+      standard: ['Standard assessment', 'تقييم اعتيادي'],
+      unclassified: ['Unclassified · assess', 'غير مصنف · يلزم تقييم']
+    };
+
+    const $node = (tag, cls, content) => {
+      const n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (content !== undefined) n.textContent = content;
+      return n;
+    };
+
+    function btn(en, ar, cls, action) {
+      const b = $node('button', 'btn ' + (cls || ''), T(en, ar));
+      b.type = 'button';
+      b.addEventListener('click', action);
+      return b;
+    }
+
+    const time = (iso) =>
+      new Date(iso).toLocaleString(state.lang === 'ar' ? 'ar-SA' : 'en-GB', {
+        timeZone: 'Asia/Riyadh',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+
+    function toast(en, ar) {
+      $('toast').textContent = T(en, ar || en);
+      $('toast').hidden = false;
+      clearTimeout(toast.t);
+      toast.t = setTimeout(() => ($('toast').hidden = true), 5200);
+    }
+
+    function apiHeaders(extra = {}) {
+      const h = { ...extra };
+      if (state.clientOpenAIKey) h['x-openai-key'] = state.clientOpenAIKey;
+      return h;
+    }
+
+    function updateAIStatusUI() {
+      const hasOpenAI = state.aiConfigured || Boolean(state.clientOpenAIKey);
+      $('ai-dot').className = 'dot ' + (hasOpenAI ? '' : 'amber-dot');
+      $('ai-status-text').textContent = hasOpenAI
+        ? T('OpenAI Whisper · Connected', 'OpenAI Whisper · متصل')
+        : T('AI Engine · Hybrid / Setup', 'محرك الذكاء · هجين / إعداد');
+      $('sync-badge').textContent = state.serverConnected
+        ? T('Live Kiosk ↔ EMR Sync Active', 'مزامنة فورية نشطة مع لوحة الطبيب')
+        : T('Browser Local Mode', 'وضع المتصفح المحلي');
+      $('sync-badge').className = 'badge ' + (state.serverConnected ? 'green' : 'demo');
+    }
+
+    // Feature 3: Render Quick Symptom Pills & Visual 0-10 Pain Scale
+    function renderQuickSymptoms() {
+      const container = $('quick-symptom-pills');
+      if (!container) return;
+      container.replaceChildren();
+      (M.QUICK_SYMPTOMS || []).forEach((item) => {
+        const b = $node('button', 'pill-btn', state.lang === 'ar' ? item.labelAr : item.labelEn);
+        b.type = 'button';
+        b.addEventListener('click', () => {
+          const phrase = state.lang === 'ar' ? item.textAr : item.textEn;
+          const cur = $('field-complaint').value.trim();
+          if (!cur) {
+            $('field-complaint').value = phrase;
+          } else if (!cur.toLowerCase().includes(phrase.toLowerCase())) {
+            const sep = state.lang === 'ar' || /[\u0600-\u06FF]/.test(cur) ? '، ' : ', ';
+            $('field-complaint').value = cur + sep + phrase;
+          }
+          $('confirm-transcript').checked = false;
+          state.structured = M.localStructure($('field-complaint').value, getForm());
+          renderAIPreview(state.structured);
+          updateRedFlag();
+        });
+        container.append(b);
+      });
+    }
+
+    function renderPainBar() {
+      const bar = $('pain-scale-bar');
+      if (!bar) return;
+      bar.replaceChildren();
+      const currentPain = $('field-pain')?.value !== '' && $('field-pain')?.value != null
+        ? Number($('field-pain').value)
+        : null;
+
+      const labelEl = $('pain-selected-label');
+      if (currentPain === null || Number.isNaN(currentPain)) {
+        labelEl.textContent = T('Not selected', 'غير محدد');
+        labelEl.className = 'muted';
+      } else {
+        const desc =
+          currentPain <= 3
+            ? T(`${currentPain}/10 · Mild`, `${currentPain}/10 · خفيف`)
+            : currentPain <= 6
+            ? T(`${currentPain}/10 · Moderate`, `${currentPain}/10 · متوسط`)
+            : T(`${currentPain}/10 · Severe`, `${currentPain}/10 · شديد`);
+        labelEl.textContent = desc;
+        labelEl.className = currentPain <= 3 ? 'emerald' : currentPain <= 6 ? 'amber' : 'red-text';
+      }
+
+      for (let i = 0; i <= 10; i++) {
+        const tier = i <= 3 ? 'mild' : i <= 6 ? 'mod' : 'sev';
+        const b = $node('button', 'pain-btn ' + tier, String(i));
+        b.type = 'button';
+        b.setAttribute('aria-pressed', currentPain === i ? 'true' : 'false');
+        b.addEventListener('click', () => {
+          if ($('field-pain')) {
+            $('field-pain').value = currentPain === i ? '' : String(i);
+          }
+          renderPainBar();
+          updateRedFlag();
+        });
+        bar.append(b);
+      }
+    }
+
+    function audit(action, p, detail = '') {
+      const entry = {
+        id: M.uid(),
+        at: new Date().toISOString(),
+        actor: state.role || 'Demo Patient',
+        action,
+        patientId: p?.id || null,
+        detail: M.text(detail, 1700)
+      };
+      state.audit.unshift(entry);
+      state.audit = state.audit.slice(0, 400);
+      save();
+      renderAudit();
+      if (state.serverConnected) {
+        fetch('/api/audit', {
+          method: 'POST',
+          headers: apiHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(entry)
+        }).catch(() => {});
+      }
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(KEY, JSON.stringify({ schema: 2, queue: state.queue, audit: state.audit }));
+        state.storage = true;
+      } catch (e) {
+        state.storage = false;
+      }
+      storageStatus();
+    }
+
+    function storageStatus() {
+      const en = state.serverConnected
+        ? 'Synced with local MedFlow Server + browser · synthetic only'
+        : state.storage
+        ? 'Saved in this browser · synthetic only'
+        : 'Session only · browser storage unavailable';
+      const ar = state.serverConnected
+        ? 'متزامن مع خادم MedFlow المحلي والمتصفح · بيانات وهمية فقط'
+        : state.storage
+        ? 'محفوظ في هذا المتصفح · وهمي فقط'
+        : 'هذه الجلسة فقط · تخزين المتصفح غير متاح';
+      $('save-status').textContent = T(en, ar);
+      $('save-status').classList.toggle('amber', !state.storage && !state.serverConnected);
+      $('storage-detail').textContent = T(
+        'Only synthetic MedFlow records are stored. Raw microphone audio is never saved to disk or browser storage.',
+        'تُحفظ سجلات MedFlow الوهمية فقط. لا يُحفظ الصوت الخام على القرص أو في تخزين المتصفح.'
+      );
+      updateAIStatusUI();
+    }
+
+    function loadLocal() {
+      try {
+        const raw = localStorage.getItem(KEY);
+        if (raw === null) {
+          state.queue = M.seed();
+          state.audit = [
+            {
+              id: M.uid(),
+              at: new Date().toISOString(),
+              actor: 'Demo Patient',
+              action: 'demo.initialized',
+              patientId: null,
+              detail: 'Synthetic seed patients only'
+            }
+          ];
+          save();
+          return;
+        }
+        const data = JSON.parse(raw);
+        if (data.schema !== 2 || !Array.isArray(data.queue) || !Array.isArray(data.audit))
+          throw Error('schema');
+        state.queue = data.queue
+          .slice(0, 200)
+          .map(M.normalize)
+          .filter((p) => M.validate({ ...p, vitals: p.vitals }).length === 0);
+        state.audit = data.audit
+          .slice(0, 400)
+          .filter((e) => e && typeof e.action === 'string' && isFinite(Date.parse(e.at)))
+          .map((e) => ({
+            id: M.text(e.id, 60),
+            at: new Date(e.at).toISOString(),
+            actor: M.text(e.actor, 80),
+            action: M.text(e.action, 80),
+            patientId: M.text(e.patientId, 60),
+            detail: M.text(e.detail, 1700)
+          }));
+      } catch (e) {
+        state.queue = M.seed();
+        state.audit = [];
+        state.storage = false;
+      }
+      storageStatus();
+    }
+
+    async function connectBackend() {
+      if (location.protocol === 'file:') return;
+      try {
+        const res = await fetch('/api/state', { headers: apiHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.ok) {
+          state.serverConnected = true;
+          state.aiConfigured = Boolean(data.aiConfigured);
+          state.queue = (data.queue || []).map(M.normalize);
+          state.audit = data.audit || [];
+          save();
+          renderQueue();
+          renderAudit();
+          updateAIStatusUI();
+        }
+        const es = new EventSource('/api/events');
+        es.onmessage = (ev) => {
+          try {
+            const msg = JSON.parse(ev.data);
+            state.serverConnected = true;
+            if (typeof msg.aiConfigured === 'boolean') state.aiConfigured = msg.aiConfigured;
+            if (Array.isArray(msg.queue)) state.queue = msg.queue.map(M.normalize);
+            if (Array.isArray(msg.audit)) state.audit = msg.audit;
+            save();
+            renderQueue();
+            renderAudit();
+            if (state.selected) renderDetail();
+            if (state.last) renderReceipt();
+            if (msg.type === 'encounter.created' && state.view === 'emr') {
+              toast(
+                'New patient intake arrived live from Kiosk!',
+                'وصل طلب استقبال مريض جديد مباشرة من الكشك!'
+              );
+            }
+          } catch (_) {}
+        };
+        es.onerror = () => {
+          state.serverConnected = false;
+          updateAIStatusUI();
+        };
+      } catch (_) {
+        state.serverConnected = false;
+        updateAIStatusUI();
+      }
+    }
+
+    function renderAIPreview(st) {
+      const card = $('ai-preview-card');
+      if (!st || !st.complaint_en) {
+        card.hidden = true;
+        return;
+      }
+      card.hidden = false;
+      $('ai-provider-badge').textContent =
+        st.provider && st.provider.startsWith('openai:')
+          ? 'OpenAI ' + st.provider.split(':')[1]
+          : T('Hybrid Clinical NLP', 'المحلل السريري الهجين');
+      $('ai-preview-en').textContent = 'EN: ' + st.complaint_en;
+      $('ai-preview-ar').textContent = 'AR: ' + st.complaint_ar;
+
+      const chips = $('ai-preview-chips');
+      chips.replaceChildren();
+      const dur = state.lang === 'ar' ? st.hpi?.duration_ar : st.hpi?.duration_en;
+      if (dur && dur !== 'Not specified' && dur !== 'غير محدد') {
+        chips.append($node('span', 'chip', T('Duration: ', 'المدة: ') + dur));
+      }
+      const pos = (state.lang === 'ar' ? st.hpi?.associated_ar : st.hpi?.associated_en) || [];
+      pos.forEach((item) => chips.append($node('span', 'chip pos', '+ ' + item)));
+      const neg = (state.lang === 'ar' ? st.hpi?.negatives_ar : st.hpi?.negatives_en) || [];
+      neg.forEach((item) => chips.append($node('span', 'chip neg', '− ' + item)));
+
+      // Feature 1: Render AI Smart Follow-Up Clarifier Chips
+      const fBox = $('ai-followup-box');
+      const fRow = $('ai-followup-row');
+      fRow.replaceChildren();
+      const followups = Array.isArray(st.followups) ? st.followups : [];
+      if (followups.length) {
+        fBox.hidden = false;
+        followups.forEach((f) => {
+          const label = state.lang === 'ar' ? f.label_ar : f.label_en;
+          const fb = $node('button', 'followup-btn', label);
+          fb.type = 'button';
+          fb.addEventListener('click', async () => {
+            const cur = $('field-complaint').value.trim();
+            const useAr = /[\u0600-\u06FF]/.test(cur) || state.lang === 'ar';
+            const phrase = useAr ? f.append_ar : f.append_en;
+            if (!cur.includes(phrase)) {
+              $('field-complaint').value = (cur ? cur + (useAr ? ' ' : ' ') : '') + phrase;
+            }
+            fb.classList.add('applied');
+            fb.textContent = '✓ ' + label;
+            $('confirm-transcript').checked = false;
+            await runAIStructuring(true);
+            updateRedFlag();
+            toast('Clarification added to your complaint!', 'تمت إضافة التوضيح إلى نص الشكوى!');
+          });
+          fRow.append(fb);
+        });
+      } else {
+        fBox.hidden = true;
+      }
+
+      // Auto-populate optional health details if blank
+      let autoFilled = false;
+      if (st.extracted_allergies && !$('field-allergies').value.trim()) {
+        $('field-allergies').value = st.extracted_allergies;
+        autoFilled = true;
+      }
+      if (st.extracted_medications && !$('field-medications').value.trim()) {
+        $('field-medications').value = st.extracted_medications;
+        autoFilled = true;
+      }
+      if (st.extracted_history && !$('field-history').value.trim()) {
+        $('field-history').value = st.extracted_history;
+        autoFilled = true;
+      }
+      if (autoFilled) {
+        $('health-details-box').open = true;
+      }
+    }
+
+    async function runAIStructuring(silent = false) {
+      const raw = getForm();
+      if (!raw.complaint.trim()) {
+        if (!silent) toast('Enter or record a complaint first.', 'أدخل أو سجل الشكوى أولاً.');
+        return null;
+      }
+      const btnEl = $('ai-structure-btn');
+      btnEl.disabled = true;
+      try {
+        if (state.serverConnected) {
+          const resp = await fetch('/api/structure', {
+            method: 'POST',
+            headers: apiHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify(raw)
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data.ok && data.structured) {
+              state.structured = data.structured;
+              renderAIPreview(state.structured);
+              updateRedFlag();
+              if (!silent) {
+                toast(
+                  'Bilingual clinical summary & HPI extracted.',
+                  'تم استخلاص الملخص السريري ثنائي اللغة وتفاصيل الحالة.'
+                );
+              }
+              return state.structured;
+            }
+          }
+        }
+        state.structured = M.localStructure(raw.complaint, raw);
+        renderAIPreview(state.structured);
+        updateRedFlag();
+        if (!silent) {
+          toast('Structured bilingual summary generated.', 'تم إنشاء الملخص السريري ثنائي اللغة.');
+        }
+        return state.structured;
+      } catch (_) {
+        state.structured = M.localStructure(raw.complaint, raw);
+        renderAIPreview(state.structured);
+        return state.structured;
+      } finally {
+        btnEl.disabled = false;
+      }
+    }
+
+    async function transcribeAudio(blob) {
+      const langHint = $('voice-lang')?.value || (state.lang === 'ar' ? 'ar' : 'en');
+      if (state.serverConnected) {
+        try {
+          const resp = await fetch(`/api/transcribe?lang=${encodeURIComponent(langHint)}`, {
+            method: 'POST',
+            headers: apiHeaders({ 'Content-Type': blob.type || 'audio/webm' }),
+            body: blob
+          });
+          const data = await resp.json();
+          if (data.ok && data.mode === 'openai' && data.text) {
+            return {
+              mode: 'openai',
+              model: data.model,
+              text: data.text,
+              structured: data.structured || null
+            };
+          }
+        } catch (_) {}
+      }
+
+      if (state.clientOpenAIKey && state.clientOpenAIKey.startsWith('sk-')) {
+        try {
+          const form = new FormData();
+          form.append('file', blob, 'intake.webm');
+          form.append('model', 'whisper-1');
+          if (langHint === 'ar' || langHint === 'en') form.append('language', langHint);
+          const resp = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+            method: 'POST',
+            headers: { Authorization: 'Bearer ' + state.clientOpenAIKey },
+            body: form
+          });
+          if (resp.ok) {
+            const resData = await resp.json();
+            if (resData.text) {
+              const st = M.localStructure(resData.text, getForm());
+              return {
+                mode: 'openai',
+                model: 'whisper-1',
+                text: resData.text,
+                structured: st
+              };
+            }
+          }
+        } catch (_) {}
+      }
+
+      if (state.liveSpeechTranscript && state.liveSpeechTranscript.trim()) {
+        const txt = state.liveSpeechTranscript.trim();
+        return {
+          mode: 'browser-stt',
+          text: txt,
+          structured: M.localStructure(txt, getForm())
+        };
+      }
+
+      return {
+        mode: 'demo',
+        text: '',
+        message: 'No OpenAI API key set and browser speech recognition did not capture words.'
+      };
+    }
+    window.transcribeAudio = transcribeAudio;
+
+    function translate() {
+      document.documentElement.lang = state.lang;
+      document.documentElement.dir = state.lang === 'ar' ? 'rtl' : 'ltr';
+      document.querySelectorAll('[data-en][data-ar]').forEach((el) => {
+        el.textContent = el.dataset[state.lang];
+      });
+      document.querySelectorAll('[data-placeholder-en]').forEach((el) => {
+        el.placeholder = el.getAttribute('data-placeholder-' + state.lang);
+      });
+      $('lang-en').setAttribute('aria-pressed', state.lang === 'en');
+      $('lang-ar').setAttribute('aria-pressed', state.lang === 'ar');
+      $('role-badge').textContent = state.role || T('Demo Clinician', 'طبيب تجريبي');
+      storageStatus();
+      renderVitals($('intake-vitals'), 'field-', readVitals('field-'));
+      renderQuickSymptoms();
+      renderPainBar();
+      if (state.structured) renderAIPreview(state.structured);
+      renderQueue();
+      renderAudit();
+      if (state.selected) renderDetail();
+      if (state.last) renderReceipt();
+      if (!state.recording) voiceStatus('idle');
+      updateRedFlag();
+    }
+
+    function setLang(lang) {
+      state.lang = lang;
+      state.noteLang = lang;
+      if ($('voice-lang')) $('voice-lang').value = lang;
+      translate();
+    }
+
+    function openDialog(id) {
+      const d = $(id);
+      if (d && !d.open) d.showModal();
+    }
+
+    function showView(view) {
+      if (view === 'emr' && !state.role) {
+        openDialog('role-dialog');
+        return;
+      }
+      if (view !== 'kiosk' && state.recording) stopRecording();
+      document.querySelectorAll('.view').forEach((v) => (v.hidden = v.id !== 'view-' + view));
+      document.querySelectorAll('.nav-btn').forEach((b) => {
+        if (b.dataset.tab === view) b.setAttribute('aria-current', 'page');
+        else b.removeAttribute('aria-current');
+      });
+      state.view = view;
+      if (view === 'emr') {
+        renderQueue();
+        renderAudit();
+        if (state.selected) renderDetail();
+      }
+      $('main').focus({ preventScroll: true });
+    }
+
+    function ensureClinician(id) {
+      if (!state.role) {
+        state.pendingId = id;
+        openDialog('role-dialog');
+        return;
+      }
+      showView('emr');
+      openChart(id);
+    }
+
+    function readVitals(prefix) {
+      const v = {};
+      for (const k of Object.keys(M.limits)) {
+        const n = $(prefix + k);
+        if (n && n.value !== '') v[k] = M.digits(n.value);
+      }
+      return v;
+    }
+
+    function renderVitals(container, prefix, values = {}) {
+      container.replaceChildren();
+      for (const [key, spec] of Object.entries(M.vitalSpec)) {
+        const label = $node('label', 'field'),
+          name = $node('span', null, spec[state.lang === 'ar' ? 1 : 0] + ' · ' + spec[3]);
+        const input = $node('input');
+        input.type = 'number';
+        input.id = prefix + key;
+        input.min = M.limits[key][0];
+        input.max = M.limits[key][1];
+        input.step = key === 'temp' ? '.1' : '1';
+        input.placeholder = '—';
+        input.value = values[key] ?? '';
+        input.addEventListener('input', () => {
+          if (prefix === 'field-') {
+            if (key === 'pain') renderPainBar();
+            updateRedFlag();
+          }
+        });
+        label.append(name, input);
+        container.append(label);
+      }
+    }
+
+    function getForm() {
+      return {
+        name: $('field-name').value,
+        nid: M.digits($('field-id').value),
+        age: $('field-age').value,
+        sex: $('field-sex').value,
+        complaint: $('field-complaint').value,
+        allergies: $('field-allergies').value,
+        medications: $('field-medications').value,
+        history: $('field-history').value,
+        vitals: readVitals('field-'),
+        structured: state.structured,
+        source: state.source,
+        doorToIntakeSec: Math.max(
+          12,
+          Math.min(600, Math.round((Date.now() - state.formStartedAt) / 1000))
+        )
+      };
+    }
+
+    function updateRedFlag() {
+      const raw = getForm();
+      $('redflag-live').hidden = M.flag(raw).level !== 'immediate';
+    }
+
+    function showFormErrors(errors) {
+      document
+        .querySelectorAll('#intake-form [aria-invalid]')
+        .forEach((n) => n.removeAttribute('aria-invalid'));
+      if (!errors.length) {
+        $('form-error').hidden = true;
+        return;
+      }
+      const messages = {
+        name: ['Enter a synthetic patient name.', 'أدخل اسم مريض وهمي.'],
+        nid: [
+          'Use a 10-digit synthetic ID beginning with 1 or 2.',
+          'استخدم هوية وهمية من 10 أرقام تبدأ بـ 1 أو 2.'
+        ],
+        age: ['Enter a whole-number age from 0 to 120.', 'أدخل عمراً صحيحاً من 0 إلى 120.'],
+        complaint: ['Enter a complaint before continuing.', 'أدخل الشكوى قبل المتابعة.'],
+        confirm: ['Review the complaint and confirm its accuracy.', 'راجع الشكوى وأكد صحتها.'],
+        synthetic: [
+          'Confirm you are using fictional data only.',
+          'أكد استخدام بيانات وهمية فقط.'
+        ],
+        bp: [
+          'Enter both blood-pressure values; systolic must exceed diastolic.',
+          'أدخل قيمتي ضغط الدم؛ الانقباضي يجب أن يفوق الانبساطي.'
+        ]
+      };
+      $('form-error').textContent = errors
+        .map((k) =>
+          messages[k]
+            ? T(...messages[k])
+            : T(
+                'Check the allowed range for ' + M.vitalSpec[k][0] + '.',
+                'تحقق من المجال المسموح لـ ' + M.vitalSpec[k][1] + '.'
+              )
+        )
+        .join(' ');
+      $('form-error').hidden = false;
+      for (const key of errors) {
+        const field = $(
+          key === 'nid'
+            ? 'field-id'
+            : key === 'confirm'
+            ? 'confirm-transcript'
+            : key === 'synthetic'
+            ? 'synthetic-only'
+            : 'field-' + key
+        );
+        field?.setAttribute('aria-invalid', 'true');
+      }
+      const first = $('intake-form').querySelector('[aria-invalid=true]');
+      first?.focus();
+    }
+
+    async function submit(e) {
+      e.preventDefault();
+      if ($('submit-intake').disabled) return;
+      const raw = getForm(),
+        errors = M.validate(raw);
+      if (!$('confirm-transcript').checked) errors.push('confirm');
+      if (!$('synthetic-only').checked) errors.push('synthetic');
+      showFormErrors(errors);
+      if (errors.length) return;
+
+      $('submit-intake').disabled = true;
+
+      if (!raw.structured) {
+        raw.structured = await runAIStructuring(true);
+      }
+
+      if (state.serverConnected) {
+        try {
+          const resp = await fetch('/api/encounters', {
+            method: 'POST',
+            headers: apiHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify(raw)
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data.ok && data.encounter) {
+              state.queue = (data.queue || []).map(M.normalize);
+              state.audit = data.audit || state.audit;
+              state.last = data.encounter.id;
+              save();
+              renderReceipt();
+              renderQueue();
+              updateRedFlag();
+              toast(
+                'Intake & routing ticket created! Synced live to Clinician Dashboard.',
+                'تم إنشاء الطلب وتذكرة التوجيه ومزامنتهما فورياً مع لوحة الطبيب!'
+              );
+              $('ticket-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              return;
+            }
+          }
+        } catch (_) {}
+      }
+
+      const p = M.normalize({ ...raw, id: M.uid(), createdAt: new Date().toISOString() });
+      state.queue.unshift(p);
+      state.queue = state.queue.slice(0, 200);
+      state.last = p.id;
+      audit('intake.created', p, 'Patient confirmed text; source: ' + p.source);
+      renderReceipt();
+      renderQueue();
+      updateRedFlag();
+      toast(
+        'Synthetic intake & routing ticket created.',
+        'تم إنشاء طلب الاستقبال وتذكرة التوجيه.'
+      );
+      $('ticket-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function urgencyBadge(level) {
+      const b = $node(
+        'span',
+        'badge ' +
+          (level === 'immediate'
+            ? 'red'
+            : level === 'priority' || level === 'unclassified'
+            ? 'amber'
+            : 'green'),
+        labels[level][state.lang === 'ar' ? 1 : 0]
+      );
+      return b;
+    }
+
+    function renderNote(container, p, lang) {
+      container.replaceChildren();
+      container.lang = lang;
+      container.dir = lang === 'ar' ? 'rtl' : 'ltr';
+      const s = M.soap(p, lang),
+        ar = lang === 'ar';
+      const names = ar
+        ? [
+            'ذاتي · إفادة المريض والملخص ثنائي اللغة',
+            'موضوعي · قياسات مؤكدة فقط',
+            'تقييم · اقتراح النظام وصمام الأمان',
+            'خطة · تقييم بشري وتوجيه المسار'
+          ]
+        : [
+            'Subjective · Verbatim & Bilingual AI Handover',
+            'Objective · Confirmed measurements only',
+            'Assessment · System suggestion & guardrails',
+            'Plan · Human assessment & ED Routing'
+          ];
+      Object.keys(s).forEach((k, i) => {
+        const part = $node(
+          'div',
+          'note-part ' + (i === 0 ? 'patient' : i === 1 ? 'clinician' : 'system')
+        );
+        part.append($node('dt', null, names[i]), $node('dd', null, s[k]));
+        container.append(part);
+      });
+    }
+
+    // Feature 2: Render Patient Routing & Queue Ticket Card + Audio Readout
+    function renderReceipt() {
+      const p = state.queue.find((p) => p.id === state.last);
+      if (!p) {
+        $('soap-card').hidden = true;
+        $('ticket-card').hidden = true;
+        return;
+      }
+      $('workflow-card').hidden = true;
+      $('soap-card').hidden = false;
+      $('ticket-card').hidden = false;
+
+      const t = M.routingTicket(p, state.queue);
+      const b = urgencyBadge(M.flag(p).level);
+      $('soap-badge').className = b.className;
+      $('soap-badge').textContent = b.textContent;
+      $('ticket-urgency-badge').className = b.className;
+      $('ticket-urgency-badge').textContent = b.textContent;
+
+      $('ticket-number').textContent = t.code;
+      $('ticket-number').className =
+        'ticket-code ' +
+        (t.color === 'red' ? 'red-text' : t.color === 'amber' ? 'amber' : 'emerald');
+      $('ticket-zone').textContent = state.lang === 'ar' ? t.zoneAr : t.zoneEn;
+      $('ticket-wait').textContent = state.lang === 'ar' ? t.waitAr : t.waitEn;
+      $('ticket-qr').innerHTML = M.qrSvg(p.id + ':' + t.code);
+
+      renderNote($('soap-body'), p, state.noteLang);
+      document
+        .querySelectorAll('[data-note-lang]')
+        .forEach((b) => b.setAttribute('aria-pressed', b.dataset.noteLang === state.noteLang));
+    }
+
+    function speakTicketInstructions() {
+      const p = state.queue.find((p) => p.id === state.last);
+      if (!p) return;
+      const t = M.routingTicket(p, state.queue);
+      const msg = state.lang === 'ar' ? t.speechAr : t.speechEn;
+      if ('speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(msg);
+          u.lang = state.lang === 'ar' ? 'ar-SA' : 'en-US';
+          u.rate = 0.96;
+          window.speechSynthesis.speak(u);
+          toast('Speaking routing instructions aloud…', 'جارٍ قراءة توجيهات المسار صوتياً…');
+          return;
+        } catch (_) {}
+      }
+      toast(msg, msg);
+    }
+
+    function renderQueue() {
+      const q = state.queue;
+      const immediate = q.filter((p) => M.flag(p).level === 'immediate');
+      const priority = q.filter(
+        (p) => M.flag(p).level === 'priority' || M.flag(p).level === 'unclassified'
+      );
+      const standard = q.filter((p) => M.flag(p).level === 'standard');
+
+      $('stat-total').textContent = q.length;
+      $('stat-immediate').textContent = immediate.length;
+      $('stat-reviewed').textContent = q.filter((p) => p.review?.confirmed).length;
+      const avgSec = q.length
+        ? Math.round(q.reduce((acc, p) => acc + (p.doorToIntakeSec || 42), 0) / q.length)
+        : 42;
+      if ($('stat-flow')) $('stat-flow').textContent = avgSec + 's';
+
+      // Feature 4: Update Hospital Crowd Flow & Time Saved Analytics
+      const total = Math.max(1, q.length);
+      if ($('zone-a-count')) {
+        $('zone-a-count').textContent = immediate.length;
+        $('zone-a-bar').style.width = Math.min(100, Math.round((immediate.length / total) * 100)) + '%';
+        $('zone-b-count').textContent = priority.length;
+        $('zone-b-bar').style.width = Math.min(100, Math.round((priority.length / total) * 100)) + '%';
+        $('zone-c-count').textContent = standard.length;
+        $('zone-c-bar').style.width = Math.min(100, Math.round((standard.length / total) * 100)) + '%';
+        const minsSaved = (q.length * 4.2).toFixed(1);
+        $('stat-time-saved').textContent = T(
+          `~${minsSaved} mins nurse triage time saved`,
+          `تم توفير ~${minsSaved} دقيقة من وقت فرز التمريض`
+        );
+      }
+
+      const body = $('queue-body');
+      body.replaceChildren();
+      if (!state.role) return;
+      const search = $('queue-search').value.toLowerCase(),
+        filter = $('queue-filter').value;
+      const weight = { immediate: 0, priority: 1, unclassified: 2, standard: 3 };
+      const shown = q
+        .filter((p) => {
+          const tk = M.routingTicket(p, q);
+          return (
+            p.name +
+            ' ' +
+            tk.code +
+            ' ' +
+            p.complaint +
+            ' ' +
+            (p.structured?.complaint_en || '') +
+            ' ' +
+            (p.structured?.complaint_ar || '')
+          )
+            .toLowerCase()
+            .includes(search);
+        })
+        .filter(
+          (p) =>
+            filter === 'all' ||
+            (filter === 'pending' && !p.review?.confirmed) ||
+            (filter === 'confirmed' && p.review?.confirmed) ||
+            (filter === 'immediate' && M.flag(p).level === 'immediate')
+        )
+        .sort(
+          (a, b) =>
+            weight[M.flag(a).level] - weight[M.flag(b).level] ||
+            Date.parse(b.createdAt) - Date.parse(a.createdAt)
+        );
+
+      for (const p of shown) {
+        const tk = M.routingTicket(p, q);
+        const tr = $node('tr', state.selected === p.id ? 'selected' : '');
+        const arrival = $node('td');
+        arrival.append(
+          $node('span', 'badge ' + tk.color, tk.code),
+          $node('div', 'mono muted', time(p.createdAt))
+        );
+        const identity = $node('td');
+        identity.append(
+          $node('strong', null, p.name),
+          $node('div', 'mono muted', '******' + p.nid.slice(-4))
+        );
+        const complaint = $node('td');
+        complaint.append($node('div', null, p.complaint));
+        if (p.structured?.complaint_en && p.structured.complaint_en !== p.complaint) {
+          complaint.append($node('div', 'helper cyan', 'EN: ' + p.structured.complaint_en));
+        }
+        const urgency = $node('td');
+        urgency.append(
+          urgencyBadge(M.flag(p).level),
+          $node('div', 'helper', state.lang === 'ar' ? tk.zoneAr : tk.zoneEn)
+        );
+        if (p.review) {
+          urgency.append(
+            $node(
+              'div',
+              'helper emerald',
+              T('Clinician: ', 'الطبيب: ') + labels[p.review.urgency][state.lang === 'ar' ? 1 : 0]
+            )
+          );
+        }
+        const action = $node('td');
+        action.append(
+          btn(
+            p.review?.confirmed ? 'View confirmed note' : 'Clinician Review',
+            p.review?.confirmed ? 'عرض الملاحظة المؤكدة' : 'مراجعة الطبيب',
+            'compact cyan',
+            () => openChart(p.id)
+          )
+        );
+        tr.append(arrival, identity, complaint, urgency, action);
+        body.append(tr);
+      }
+      if (!shown.length) {
+        const tr = $node('tr'),
+          td = $node(
+            'td',
+            'empty',
+            T('No matching synthetic encounters.', 'لا توجد زيارات وهمية مطابقة.')
+          );
+        td.colSpan = 5;
+        tr.append(td);
+        body.append(tr);
+      }
+    }
+
+    function openChart(id) {
+      if (!state.role) return;
+      state.selected = id;
+      const p = state.queue.find((p) => p.id === id);
+      if (!p) return;
+      audit('chart.opened', p, 'Demo clinician detail access');
+      renderDetail();
+      renderQueue();
+      $('emr-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function kv(parent, key, value, cls = '') {
+      const d = $node('div', 'kv');
+      d.append($node('span', null, key), $node('span', cls, value));
+      parent.append(d);
+    }
+
+    function renderDetail() {
+      if (!state.role) return;
+      const p = state.queue.find((p) => p.id === state.selected);
+      if (!p) {
+        $('emr-detail').hidden = true;
+        return;
+      }
+      $('emr-detail').hidden = false;
+      const tk = M.routingTicket(p, state.queue);
+      const head = $('detail-head');
+      head.replaceChildren();
+      const h = $node('div');
+      h.append(
+        $node('p', 'eyebrow', T('Selected encounter · synthetic', 'الزيارة المحددة · وهمية')),
+        $node('h2', null, p.name + ' · [' + tk.code + ']')
+      );
+      head.append(h, btn('Preview FHIR JSON', 'معاينة FHIR JSON', 'cyan', () => previewFHIR(p.id)));
+
+      const body = $('emr-detail-body');
+      body.replaceChildren();
+      const left = $node('div'),
+        info = $node('div', 'patient-block');
+      info.append($node('span', 'badge demo', T('DEMO · No real patient', 'تجريبي · مريض وهمي')));
+      kv(info, T('Routing Ticket & Zone', 'تذكرة التوجيه والمسار'), tk.code + ' · ' + (state.lang === 'ar' ? tk.zoneAr : tk.zoneEn));
+      kv(info, T('Full synthetic ID', 'الهوية الوهمية الكاملة'), p.nid, 'mono');
+      kv(info, T('Age', 'العمر'), String(p.age));
+      kv(info, T('Intake Source', 'مصدر التسجيل'), p.source);
+      kv(info, T('Arrived (Jeddah/KSA)', 'الوصول (توقيت المملكة)'), time(p.createdAt));
+      info.append(
+        $node(
+          'p',
+          'helper',
+          T(
+            'Full ID is shown only inside this demo clinician detail screen.',
+            'تظهر الهوية الكاملة هنا فقط في شاشة الطبيب التجريبي.'
+          )
+        )
+      );
+      left.append(info);
+
+      const suggested = $node('div', 'patient-block', undefined);
+      suggested.style.marginTop = '14px';
+      suggested.append(
+        $node('p', 'eyebrow amber', T('System-generated suggestion', 'اقتراح أنشأه النظام')),
+        urgencyBadge(M.flag(p).level),
+        $node(
+          'p',
+          'helper',
+          T(
+            'Deterministic red-flag floor + AI structuring. Clinician confirmation required.',
+            'قواعد إنذار حتمية مع هيكلة ذكية. يلزم تأكيد الطبيب.'
+          )
+        )
+      );
+      if (M.flag(p).level === 'immediate')
+        suggested.append(
+          $node(
+            'p',
+            'helper red-text',
+            T('IMMEDIATE HUMAN TRIAGE REQUIRED. Alert staff now.', 'يلزم فرز بشري فوري. أبلغ الطاقم الآن.')
+          )
+        );
+      left.append(suggested);
+
+      const form = $node('form', 'review-form');
+      form.id = 'review-form';
+      form.noValidate = true;
+      form.append($node('h3', null, T('Clinician Review', 'مراجعة الطبيب')));
+      const lab = $node('label', 'field');
+      lab.append($node('span', null, T('Change urgency', 'تغيير الاستعجال')));
+      const select = $node('select');
+      select.id = 'review-urgency';
+      for (const [v, pair] of Object.entries(labels)) {
+        const o = $node('option', null, pair[state.lang === 'ar' ? 1 : 0]);
+        o.value = v;
+        select.append(o);
+      }
+      select.value = p.review?.urgency || M.flag(p).level;
+      lab.append(select);
+      form.append(lab);
+      const actions = $node('div', 'row');
+      actions.style.marginTop = '11px';
+      actions.append(
+        btn('Accept suggestion', 'قبول الاقتراح', 'compact', () => (select.value = M.flag(p).level)),
+        btn('Escalate', 'تصعيد', 'compact danger', () => (select.value = 'immediate'))
+      );
+      form.append(actions);
+
+      const comments = $node('label', 'field');
+      comments.style.marginTop = '14px';
+      comments.append(
+        $node(
+          'span',
+          null,
+          T('Add clinician comment · required for override', 'تعليق الطبيب · مطلوب عند التعديل')
+        )
+      );
+      const ta = $node('textarea');
+      ta.id = 'review-comment';
+      ta.maxLength = 1500;
+      ta.rows = 3;
+      ta.value = p.review?.comment || '';
+      ta.dir = 'auto';
+      comments.append(ta);
+      form.append(comments);
+
+      const measurements = $node('details'),
+        summary = $node(
+          'summary',
+          null,
+          T('Record measured vital signs', 'تسجيل العلامات الحيوية المقاسة')
+        );
+      measurements.append(
+        summary,
+        $node(
+          'p',
+          'helper',
+          T(
+            'Enter measurements made by the demo clinician. These become objective only when measurement confirmation is checked and the review is saved.',
+            'أدخل القياسات التي أجراها الطبيب التجريبي. تصبح موضوعية بعد تأكيد القياس وحفظ المراجعة.'
+          )
+        )
+      );
+      const vg = $node('div', 'vitals-grid');
+      renderVitals(vg, 'measured-', p.measuredVitals);
+      measurements.append(vg);
+      form.append(measurements);
+
+      const measureLabel = $node('label', 'check'),
+        measureCheck = $node('input');
+      measureCheck.type = 'checkbox';
+      measureCheck.id = 'measure-confirm';
+      measureCheck.checked = Object.keys(p.measuredVitals).length > 0;
+      measureLabel.append(
+        measureCheck,
+        $node(
+          'span',
+          null,
+          T(
+            'I confirm the entered measurements were assessed in this demo.',
+            'أؤكد أن القياسات المدخلة تم تقييمها في هذا العرض.'
+          )
+        )
+      );
+      form.append(measureLabel);
+
+      const confirmLabel = $node('label', 'check'),
+        check = $node('input');
+      check.type = 'checkbox';
+      check.id = 'note-confirm';
+      check.checked = p.review?.confirmed === true;
+      confirmLabel.append(
+        check,
+        $node(
+          'span',
+          null,
+          T(
+            'Confirm note · I have reviewed the patient report and all note sections.',
+            'تأكيد الملاحظة · راجعت إفادة المريض وكل أقسام الملاحظة.'
+          )
+        )
+      );
+      form.append(confirmLabel);
+      const err = $node('div', 'error');
+      err.id = 'review-error';
+      err.role = 'alert';
+      err.hidden = true;
+      form.append(err);
+      const saveBtn = $node('button', 'btn primary full', T('Save clinician review', 'حفظ مراجعة الطبيب'));
+      saveBtn.type = 'submit';
+      form.append(saveBtn);
+      form.append(
+        $node(
+          'p',
+          'helper',
+          p.review
+            ? T('Last review: ', 'آخر مراجعة: ') + p.review.reviewer + ' · ' + time(p.review.at)
+            : T('Reviewer: ', 'المراجع: ') + state.role
+        )
+      );
+      form.addEventListener('submit', (e) => saveReview(e, p.id));
+      left.append(form);
+
+      const right = $node('div');
+      const tabs = $node('div', 'note-tabs');
+      for (const lang of ['en', 'ar']) {
+        const b = btn(
+          lang === 'en' ? 'English' : 'العربية',
+          lang === 'en' ? 'English' : 'العربية',
+          'compact',
+          () => {
+            state.noteLang = lang;
+            renderNote(note, p, lang);
+            tabs.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b));
+          }
+        );
+        b.setAttribute('aria-pressed', state.noteLang === lang);
+        tabs.append(b);
+      }
+      const note = $node('dl');
+      right.append(tabs, note);
+      renderNote(note, p, state.noteLang);
+      if (p.review) {
+        const r = $node('div', 'note-part clinician');
+        r.append(
+          $node(
+            'dt',
+            null,
+            p.review.confirmed
+              ? T('Clinician-confirmed note', 'ملاحظة أكدها الطبيب')
+              : T('Clinician review · draft note', 'مراجعة الطبيب · ملاحظة مسودة')
+          ),
+          $node(
+            'dd',
+            null,
+            `${p.review.reviewer} · ${time(p.review.at)}\n${
+              labels[p.review.urgency][state.lang === 'ar' ? 1 : 0]
+            }\n${p.review.comment || T('No comment', 'لا يوجد تعليق')}`
+          )
+        );
+        right.append(r);
+      }
+      body.append(left, right);
+    }
+
+    async function saveReview(e, id) {
+      e.preventDefault();
+      if (!state.role) return;
+      const p = state.queue.find((p) => p.id === id);
+      if (!p) return;
+      const urgency = $('review-urgency').value,
+        comment = M.text($('review-comment').value, 1500),
+        entered = readVitals('measured-');
+      const errors = M.validate({ ...p, vitals: entered }).filter(
+        (x) => Object.keys(M.limits).includes(x) || x === 'bp'
+      );
+      let error = '';
+      if (urgency !== M.flag(p).level && !comment)
+        error = T('Add a reason for changing the system suggestion.', 'أضف سبباً لتغيير اقتراح النظام.');
+      else if (errors.length)
+        error = T(
+          'Check measured vital ranges and both blood-pressure fields.',
+          'تحقق من مجال القياسات وقيمتي ضغط الدم.'
+        );
+      else if (Object.keys(entered).length && !$('measure-confirm').checked)
+        error = T(
+          'Confirm measurement provenance before saving objective values.',
+          'أكد مصدر القياسات قبل حفظ القيم الموضوعية.'
+        );
+      if (error) {
+        $('review-error').textContent = error;
+        $('review-error').hidden = false;
+        return;
+      }
+
+      if (state.serverConnected) {
+        try {
+          const resp = await fetch(`/api/encounters/${encodeURIComponent(id)}/review`, {
+            method: 'POST',
+            headers: apiHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({
+              urgency,
+              comment,
+              measuredVitals: entered,
+              confirmed: $('note-confirm').checked,
+              reviewer: state.role
+            })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data.ok) {
+              state.queue = (data.queue || []).map(M.normalize);
+              state.audit = data.audit || state.audit;
+              save();
+              renderDetail();
+              renderQueue();
+              if (state.last === p.id) renderReceipt();
+              toast('Clinician review saved & synced.', 'حُفظت مراجعة الطبيب وتمت مزامنتها.');
+              return;
+            }
+          }
+        } catch (_) {}
+      }
+
+      const old = p.review?.urgency || 'unreviewed';
+      p.measuredVitals = {};
+      for (const [k, v] of Object.entries(entered)) p.measuredVitals[k] = Number(v);
+      p.review = {
+        urgency,
+        comment,
+        confirmed: $('note-confirm').checked,
+        reviewer: state.role,
+        at: new Date().toISOString()
+      };
+      audit(
+        p.review.confirmed ? 'note.confirmed' : 'review.saved',
+        p,
+        `urgency: ${old} → ${urgency}; original prototype flag: ${M.flag(p).level}; comment: ${
+          comment || '(none)'
+        }`
+      );
+      renderDetail();
+      renderQueue();
+      if (state.last === p.id) renderReceipt();
+      toast('Clinician review saved with reviewer and timestamp.', 'حُفظت المراجعة مع اسم المراجع والوقت.');
+    }
+
+    function renderAudit() {
+      const el = $('audit-list');
+      el.replaceChildren();
+      if (!state.role) return;
+      for (const e of state.audit.slice(0, 60)) {
+        const li = $node('li');
+        li.append($node('time', null, time(e.at)), $node('strong', null, e.action + ' · ' + e.actor));
+        if (e.detail) li.append($node('p', 'muted', e.detail));
+        el.append(li);
+      }
+      if (!state.audit.length)
+        el.append($node('li', 'muted', T('No audit events yet.', 'لا توجد أحداث تدقيق بعد.')));
+    }
+
+    function previewFHIR(id) {
+      if (!state.role) return;
+      const p = state.queue.find((p) => p.id === id);
+      if (!p) return;
+      state.fhir = { id, json: JSON.stringify(M.fhir(p), null, 2) };
+      $('fhir-json').textContent = state.fhir.json;
+      $('fhir-summary').textContent = T(
+        'Document Bundle · Composition first · Patient + Practitioner + Encounter + available Observations · no unconfirmed diagnosis.',
+        'حزمة مستند · Composition أولاً · المريض والممارس والزيارة والقياسات المتاحة · دون تشخيص غير مؤكد.'
+      );
+      audit('fhir.previewed', p, 'Local FHIR R4 document generation; no hospital transmission');
+      openDialog('fhir-dialog');
+    }
+
+    function download(data, name, type = 'application/json') {
+      const blob = new Blob([data], { type }),
+        url = URL.createObjectURL(blob);
+      const a = $node('a');
+      a.href = url;
+      a.download = name;
+      document.body.append(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    }
+
+    async function copyJSON() {
+      if (!state.role || !state.fhir) return;
+      try {
+        await navigator.clipboard.writeText(state.fhir.json);
+        audit('fhir.copied', state.queue.find((p) => p.id === state.fhir.id), 'Copied locally');
+        toast('JSON copied. Nothing was sent to a hospital.', 'نُسخ JSON. لم يُرسل شيء إلى مستشفى.');
+      } catch (e) {
+        const range = document.createRange();
+        range.selectNodeContents($('fhir-json'));
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        $('fhir-json').focus();
+        toast(
+          'JSON selected. Press Ctrl+C or Command+C to copy.',
+          'تم تحديد JSON. اضغط Ctrl+C أو Command+C للنسخ.'
+        );
+      }
+    }
+
+    function voiceStatus(mode, extra = '') {
+      const messages = {
+        idle: [
+          'Press Record to capture real audio (transcribed via OpenAI Whisper or Browser Speech), or click Simulate Arabic Voice.',
+          'اضغط تسجيل لالتقاط الصوت وتفريغه عبر OpenAI Whisper أو المتصفح، أو اضغط محاكاة صوت المريض.'
+        ],
+        request: ['Requesting microphone permission…', 'جارٍ طلب إذن الميكروفون…'],
+        record: [
+          'Recording live audio… Speak in Arabic or English, then press Stop & Transcribe.',
+          'جارٍ التسجيل الصوتي… تحدث بالعربية أو الإنجليزية ثم اضغط إيقاف وتفريغ النص.'
+        ],
+        transcribing: [
+          'Transcribing audio with OpenAI Whisper & extracting clinical HPI…',
+          'جارٍ تفريغ الصوت عبر OpenAI Whisper واستخلاص الملخص السريري…'
+        ],
+        transcribed_openai: [
+          'Transcribed via OpenAI (' +
+            (extra || 'Whisper') +
+            '). Tap any follow-up clarifiers below or confirm your text.',
+          'تم التفريغ الصوتي عبر OpenAI (' +
+            (extra || 'Whisper') +
+            '). يمكنك الضغط على الأسئلة التوضيحية أدناه أو تأكيد النص.'
+        ],
+        transcribed_browser: [
+          'Transcribed via Live Browser Speech Recognition. Add an OpenAI API key in AI Settings for Whisper accuracy.',
+          'تم التفريغ عبر التعرف الصوتي للمتصفح. أضف مفتاح OpenAI في الإعدادات لتفريغ Whisper الدقيق.'
+        ],
+        denied: [
+          'Microphone permission denied. Use Simulate Arabic Voice, type your complaint, or load a scenario.',
+          'تم رفض إذن الميكروفون. استخدم محاكاة الصوت أو اكتب الشكوى أو حمّل سيناريو.'
+        ],
+        unsupported: [
+          'Microphone recording unavailable in this context. Use Simulate Arabic Voice or type your complaint.',
+          'التسجيل غير متاح. استخدم محاكاة صوت المريض أو اكتب الشكوى.'
+        ],
+        stopped: [
+          'Audio recorded. Configure an OpenAI API key in AI Settings for Whisper transcription, or edit the text below.',
+          'تم تسجيل الصوت. أضف مفتاح OpenAI في إعدادات الذكاء لتفريغ Whisper أو عدّل النص أدناه.'
+        ],
+        deleted: ['Recording deleted from memory.', 'حُذف التسجيل من الذاكرة.']
+      };
+      if (messages[mode]) $('voice-status').textContent = T(...messages[mode]);
+    }
+
+    function deleteRecording() {
+      if (state.audioURL) URL.revokeObjectURL(state.audioURL);
+      state.audioURL = null;
+      $('audio-preview').pause();
+      $('audio-preview').removeAttribute('src');
+      $('audio-preview').load();
+      $('audio-preview').hidden = true;
+      $('delete-recording').hidden = true;
+      voiceStatus('deleted');
+    }
+
+    function startBrowserSpeechFallback() {
+      state.liveSpeechTranscript = '';
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return;
+      try {
+        const rec = new SR();
+        const vLang = $('voice-lang')?.value || (state.lang === 'ar' ? 'ar' : 'en');
+        rec.lang = vLang === 'ar' ? 'ar-SA' : 'en-US';
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.onresult = (event) => {
+          let transcript = '';
+          for (let i = 0; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript + ' ';
+          }
+          state.liveSpeechTranscript = transcript.trim();
+        };
+        rec.onerror = () => {};
+        rec.start();
+        state.speechRec = rec;
+      } catch (_) {}
+    }
+
+    function stopBrowserSpeechFallback() {
+      if (state.speechRec) {
+        try {
+          state.speechRec.stop();
+        } catch (_) {}
+        state.speechRec = null;
+      }
+    }
+
+    async function record() {
+      if (state.recording) return;
+      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+        voiceStatus('unsupported');
+        return;
+      }
+      voiceStatus('request');
+      $('voice-btn').disabled = true;
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (state.view !== 'kiosk') {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        deleteRecording();
+        state.stream = stream;
+        const recorder = new MediaRecorder(stream),
+          chunks = [];
+        state.recorder = recorder;
+        startBrowserSpeechFallback();
+        recorder.ondataavailable = (e) => {
+          if (e.data.size) chunks.push(e.data);
+        };
+        recorder.onerror = () => {
+          voiceStatus('unsupported');
+          stopRecording();
+        };
+        recorder.onstop = async () => {
+          stopBrowserSpeechFallback();
+          stream.getTracks().forEach((t) => t.stop());
+          state.stream = null;
+          clearInterval(state.timer);
+          state.recording = false;
+          $('stop-recording').hidden = true;
+          $('voice-wave').hidden = true;
+          $('record-timer').hidden = true;
+          $('voice-btn').disabled = false;
+          const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+          if (blob.size) {
+            state.audioURL = URL.createObjectURL(blob);
+            $('audio-preview').src = state.audioURL;
+            $('audio-preview').hidden = false;
+            $('delete-recording').hidden = false;
+            voiceStatus('transcribing');
+            const res = await window.transcribeAudio(blob);
+            if (res && res.text) {
+              $('field-complaint').value = res.text;
+              $('confirm-transcript').checked = false;
+              state.source = res.mode === 'openai' ? 'voice-openai' : 'voice-browser';
+              state.structured = res.structured || M.localStructure(res.text, getForm());
+              renderAIPreview(state.structured);
+              updateRedFlag();
+              if (res.mode === 'openai') {
+                voiceStatus('transcribed_openai', res.model);
+                toast(
+                  'Voice transcribed with OpenAI! Review and confirm your text.',
+                  'تم تفريغ الصوت عبر OpenAI! راجع النص وأكده.'
+                );
+              } else {
+                voiceStatus('transcribed_browser');
+                toast(
+                  'Voice transcribed! Review and confirm your complaint.',
+                  'تم تفريغ الصوت! راجع نص الشكوى وأكده.'
+                );
+              }
+            } else {
+              voiceStatus('stopped');
+            }
+          } else {
+            voiceStatus('idle');
+          }
+        };
+        recorder.start();
+        state.recording = true;
+        state.startedAt = Date.now();
+        $('stop-recording').hidden = false;
+        $('voice-wave').hidden = false;
+        $('record-timer').hidden = false;
+        $('record-timer').textContent = '00:00';
+        voiceStatus('record');
+        state.timer = setInterval(() => {
+          const s = Math.floor((Date.now() - state.startedAt) / 1000);
+          $('record-timer').textContent =
+            String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+          if (s >= 120) stopRecording();
+        }, 250);
+      } catch (e) {
+        stopBrowserSpeechFallback();
+        stream?.getTracks().forEach((t) => t.stop());
+        voiceStatus(
+          e.name === 'NotAllowedError' || e.name === 'SecurityError' ? 'denied' : 'unsupported'
+        );
+      } finally {
+        if (!state.recording) $('voice-btn').disabled = false;
+      }
+    }
+
+    function stopRecording() {
+      stopBrowserSpeechFallback();
+      if (state.recorder?.state === 'recording') state.recorder.stop();
+      state.stream?.getTracks().forEach((t) => t.stop());
+    }
+
+    async function simulateArabicVoice() {
+      if (state.recording) stopRecording();
+      const key = $('scenario-select')?.value || 'acs';
+      const sc = M.SCENARIOS[key] || M.SCENARIOS.acs;
+      $('voice-wave').hidden = false;
+      $('sim-voice-btn').disabled = true;
+      $('voice-status').textContent = T(
+        'Simulating Arabic voice capture & AI transcription…',
+        'جارٍ محاكاة التقاط صوت المريض والتفريغ الذكي…'
+      );
+
+      setTimeout(async () => {
+        $('voice-wave').hidden = true;
+        $('sim-voice-btn').disabled = false;
+        if (!$('field-name').value) $('field-name').value = sc.name;
+        if (!$('field-id').value) $('field-id').value = sc.nid;
+        if (!$('field-age').value) $('field-age').value = String(sc.age);
+        $('field-sex').value = sc.sex;
+        $('field-complaint').value = sc.complaint;
+        $('confirm-transcript').checked = false;
+        $('synthetic-only').checked = true;
+        state.source = 'voice-demo';
+        await runAIStructuring(true);
+        updateRedFlag();
+        $('voice-status').textContent = T(
+          'Simulated voice transcript & AI bilingual extraction complete. Review and check confirmation box.',
+          'اكتملت محاكاة التفريغ الصوتي والاستخلاص ثنائي اللغة. راجع النص وحدد مربع التأكيد.'
+        );
+        toast(
+          'Voice transcript & AI clinical extraction populated!',
+          'تم إدراج النص الصوتي واستخلاص البيانات السريرية!'
+        );
+      }, 1100);
+    }
+
+    function reset() {
+      if (state.recording) {
+        stopRecording();
+        return;
+      }
+      $('intake-form').reset();
+      deleteRecording();
+      state.source = 'typed';
+      state.structured = null;
+      state.last = null;
+      state.formStartedAt = Date.now();
+      $('ai-preview-card').hidden = true;
+      $('submit-intake').disabled = false;
+      $('soap-card').hidden = true;
+      $('ticket-card').hidden = true;
+      $('workflow-card').hidden = false;
+      $('form-error').hidden = true;
+      renderPainBar();
+      showFormErrors([]);
+      updateRedFlag();
+      voiceStatus('idle');
+    }
+
+    async function loadScenario() {
+      reset();
+      const key = $('scenario-select')?.value || 'acs';
+      const sc = M.SCENARIOS[key] || M.SCENARIOS.acs;
+      $('field-name').value = sc.name;
+      $('field-id').value = sc.nid;
+      $('field-age').value = String(sc.age);
+      $('field-sex').value = sc.sex;
+      $('field-complaint').value = sc.complaint;
+      $('field-allergies').value = sc.allergies || '';
+      $('field-medications').value = sc.medications || '';
+      $('field-history').value = sc.history || '';
+      renderVitals($('intake-vitals'), 'field-', sc.vitals || {});
+      renderPainBar();
+      state.source = 'scenario';
+      $('synthetic-only').checked = true;
+      $('confirm-transcript').checked = false;
+      await runAIStructuring(true);
+      updateRedFlag();
+      $('voice-status').textContent = T(
+        'Jeddah ED scenario loaded with bilingual AI structuring. Review and confirm the complaint text.',
+        'تم تحميل سيناريو طوارئ جدة مع الهيكلة الذكية ثنائية اللغة. راجع النص وأكده.'
+      );
+      toast(
+        'Scenario loaded. Review and confirm the complaint text.',
+        'تم تحميل السيناريو. راجع نص الشكوى وأكده.'
+      );
+    }
+
+    // Event bindings
+    document
+      .querySelectorAll('.nav-btn')
+      .forEach((b) => b.addEventListener('click', () => showView(b.dataset.tab)));
+    $('lang-en').addEventListener('click', () => setLang('en'));
+    $('lang-ar').addEventListener('click', () => setLang('ar'));
+    document
+      .querySelectorAll('[data-close]')
+      .forEach((b) => b.addEventListener('click', () => $(b.dataset.close).close()));
+
+    $('ai-status-btn').addEventListener('click', () => {
+      $('openai-key-input').value = state.clientOpenAIKey || '';
+      openDialog('ai-dialog');
+    });
+
+    $('save-ai-key').addEventListener('click', async () => {
+      const val = $('openai-key-input').value.trim();
+      if (val && !val.startsWith('sk-')) {
+        toast('OpenAI API key must start with sk-', 'يجب أن يبدأ مفتاح OpenAI بـ sk-');
+        return;
+      }
+      state.clientOpenAIKey = val;
+      if (val) sessionStorage.setItem(AI_KEY_STORAGE, val);
+      else sessionStorage.removeItem(AI_KEY_STORAGE);
+
+      if (state.serverConnected) {
+        try {
+          const resp = await fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ openaiApiKey: val, actor: state.role || 'Kiosk Admin' })
+          });
+          const data = await resp.json();
+          if (data.ok) state.aiConfigured = Boolean(data.aiConfigured);
+        } catch (_) {}
+      }
+      updateAIStatusUI();
+      $('ai-dialog').close();
+      toast(
+        val
+          ? 'OpenAI Whisper & GPT-4o-mini enabled!'
+          : 'Switched to Hybrid Local NLP + Browser Speech mode.',
+        val ? 'تم تفعيل OpenAI Whisper وGPT-4o-mini!' : 'تم التبديل إلى الوضع الهجين المحلي.'
+      );
+    });
+
+    $('clear-ai-key').addEventListener('click', async () => {
+      $('openai-key-input').value = '';
+      state.clientOpenAIKey = '';
+      sessionStorage.removeItem(AI_KEY_STORAGE);
+      if (state.serverConnected) {
+        try {
+          await fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ openaiApiKey: '' })
+          });
+          state.aiConfigured = false;
+        } catch (_) {}
+      }
+      updateAIStatusUI();
+      $('ai-dialog').close();
+      toast('Using Local Hybrid NLP & Browser Speech mode.', 'يعمل النظام الآن بالوضع الهجين المحلي.');
+    });
+
+    $('enter-role').addEventListener('click', () => {
+      state.role = M.text($('reviewer-name').value, 80) || 'Demo Clinician';
+      $('role-dialog').close();
+      audit('role.entered', null, 'Demo clinician workspace entered');
+      showView('emr');
+      if (state.pendingId) {
+        const id = state.pendingId;
+        state.pendingId = null;
+        openChart(id);
+      }
+      translate();
+    });
+
+    $('leave-role').addEventListener('click', () => {
+      audit('role.left', null);
+      state.role = null;
+      state.selected = null;
+      state.fhir = null;
+      $('fhir-json').textContent = '';
+      $('emr-detail').hidden = true;
+      $('emr-detail-body').replaceChildren();
+      $('queue-body').replaceChildren();
+      $('audit-list').replaceChildren();
+      showView('kiosk');
+    });
+
+    $('intake-form').addEventListener('submit', submit);
+    $('field-complaint').addEventListener('input', () => {
+      state.source = 'typed';
+      state.structured = null;
+      $('confirm-transcript').checked = false;
+      updateRedFlag();
+    });
+    $('intake-form').addEventListener('input', () => ($('submit-intake').disabled = false));
+    $('load-demo').addEventListener('click', loadScenario);
+    $('new-intake').addEventListener('click', reset);
+    $('to-emr').addEventListener('click', () => ensureClinician(state.last));
+    $('speak-ticket').addEventListener('click', speakTicketInstructions);
+    $('print-ticket').addEventListener('click', () => window.print());
+    document.querySelectorAll('[data-note-lang]').forEach((b) =>
+      b.addEventListener('click', () => {
+        state.noteLang = b.dataset.noteLang;
+        renderReceipt();
+      })
+    );
+    $('queue-search').addEventListener('input', renderQueue);
+    $('queue-filter').addEventListener('change', renderQueue);
+    $('voice-btn').addEventListener('click', record);
+    $('stop-recording').addEventListener('click', stopRecording);
+    $('sim-voice-btn').addEventListener('click', simulateArabicVoice);
+    $('ai-structure-btn').addEventListener('click', () => runAIStructuring(false));
+    $('delete-recording').addEventListener('click', deleteRecording);
+    $('copy-json').addEventListener('click', copyJSON);
+    $('download-json').addEventListener('click', () => {
+      if (!state.role || !state.fhir) return;
+      download(state.fhir.json, 'MedFlow_DEMO_FHIR_R4.json');
+      audit(
+        'fhir.downloaded',
+        state.queue.find((p) => p.id === state.fhir.id),
+        'Downloaded locally; no hospital transmission'
+      );
+    });
+    $('export-audit').addEventListener('click', () => {
+      if (!state.role) return;
+      audit('audit.exported', null, 'Synthetic audit log only');
+      download(
+        JSON.stringify({ demoOnly: true, events: state.audit }, null, 2),
+        'MedFlow_DEMO_Audit.json'
+      );
+    });
+    $('clear-data').addEventListener('click', () => openDialog('clear-dialog'));
+    $('confirm-clear').addEventListener('click', async () => {
+      state.queue = [];
+      state.audit = [];
+      state.selected = null;
+      state.last = null;
+      state.fhir = null;
+      $('fhir-json').textContent = '';
+      $('emr-detail').hidden = true;
+      $('emr-detail-body').replaceChildren();
+      $('soap-card').hidden = true;
+      $('ticket-card').hidden = true;
+      $('workflow-card').hidden = false;
+      deleteRecording();
+      if (state.serverConnected) {
+        await fetch('/api/reset', { method: 'POST', headers: apiHeaders() }).catch(() => {});
+      }
+      save();
+      renderQueue();
+      renderAudit();
+      $('clear-dialog').close();
+      toast(
+        'Demo data cleared. Seed scenarios can be loaded again.',
+        'تم مسح البيانات التجريبية. يمكنك تحميل السيناريوهات مجدداً.'
+      );
+    });
+    $('restore-demo').addEventListener('click', async () => {
+      if (state.serverConnected) {
+        const resp = await fetch('/api/seed', { method: 'POST', headers: apiHeaders() }).catch(
+          () => null
+        );
+        if (resp && resp.ok) {
+          const data = await resp.json();
+          state.queue = (data.queue || []).map(M.normalize);
+          state.audit = data.audit || state.audit;
+          save();
+          renderQueue();
+          toast('Three fictional patients added.', 'تمت إضافة ثلاثة مرضى وهميين.');
+          return;
+        }
+      }
+      const seeds = M.seed();
+      state.queue.push(...seeds);
+      audit('demo.seeds_loaded', null, 'Three new fictional encounters');
+      renderQueue();
+      toast('Three fictional patients added.', 'تمت إضافة ثلاثة مرضى وهميين.');
+    });
+    window.addEventListener('pagehide', () => {
+      stopRecording();
+      if (state.audioURL) URL.revokeObjectURL(state.audioURL);
+    });
+
+    loadLocal();
+    renderVitals($('intake-vitals'), 'field-');
+    translate();
+    connectBackend();
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

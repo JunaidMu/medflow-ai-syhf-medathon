@@ -1,0 +1,26 @@
+{
+  "name": "medflow-ai-mvp",
+  "version": "1.0.0",
+  "description": "MedFlow AI — Arabic-First Emergency Department Intake, OpenAI Voice Transcription & FHIR R4 Triage Handover MVP for SYHF MEDATHON Jeddah",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node test-mvp.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "SYHF",
+    "Medathon",
+    "Jeddah",
+    "Saudi-Vision-2030",
+    "Emergency-Department",
+    "FHIR-R4",
+    "PDPL",
+    "OpenAI-Whisper",
+    "Arabic-NLP"
+  ],
+  "license": "MIT"
+}
