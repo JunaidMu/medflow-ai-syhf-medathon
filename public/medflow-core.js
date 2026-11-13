@@ -810,7 +810,7 @@
         waitEn: '0 min · Immediate Nurse Escort',
         waitAr: '٠ دقيقة · مرافقة فورية لطاقم الطوارئ',
         speechEn: 'Emergency case. Please proceed immediately to Resuscitation, Zone A.',
-        speechAr: 'حالة طارئة حرجة. يرجى التوجه فوراً إلى قسم الإنعاش، المنطقة (أ).'
+        speechAr: 'حالة طارئة حرجة. يرجى التوجه فوراً إلى قسم الإنعاش، المنطقة أَلِف.'
       };
     }
     if (level === 'priority' || level === 'unclassified') {
@@ -826,7 +826,7 @@
         waitEn: `Queue #${sameTierPending + 1} · Est. ~${estMins} mins`,
         waitAr: `الترتيب #${sameTierPending + 1} · الانتظار التقريبي ~${estMins} دقيقة`,
         speechEn: `Priority case. Please proceed to the waiting area in Zone B. Estimated wait time is ${estMins} minutes.`,
-        speechAr: `حالة مستعجلة. يرجى الانتظار في المنطقة (ب) للتقييم الطبي. وقت الانتظار التقريبي ${estMins} دقيقة.`
+        speechAr: `حالة مستعجلة. يرجى الانتظار في المنطقة باء للتقييم الطبي. وقت الانتظار التقريبي ${estMins} دقيقة.`
       };
     }
     const num = String(300 + (numSeed % 89));
@@ -841,7 +841,7 @@
       waitEn: `Queue #${sameTierPending + 1} · Est. ~${estMins} mins`,
       waitAr: `الترتيب #${sameTierPending + 1} · الانتظار التقريبي ~${estMins} دقيقة`,
       speechEn: `Standard case. Please proceed to the Fast-Track clinic in Zone C. Estimated wait time is ${estMins} minutes.`,
-      speechAr: `حالة اعتيادية ومستقرة. يرجى التوجه إلى عيادة المسار السريع في المنطقة (ج). وقت الانتظار التقريبي ${estMins} دقيقة.`
+      speechAr: `حالة اعتيادية ومستقرة. يرجى التوجه إلى عيادة المسار السريع في المنطقة جيم. وقت الانتظار التقريبي ${estMins} دقيقة.`
     };
   }
 

@@ -42,6 +42,7 @@ nav{display:flex;gap:5px;flex-wrap:wrap}
 .nav-btn,.lang button{border:1px solid transparent;background:transparent;color:#cbd5e1;border-radius:9px;padding:9px 12px;font-size:12px;font-weight:600}
 .nav-btn[aria-current=page]{background:#10b98118;border-color:#34d39944;color:#a7f3d0}
 .nav-btn:hover{background:#1e293b}
+a.nav-btn{text-decoration:none;display:inline-flex;align-items:center}
 .head-actions,.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .lang{display:flex;border:1px solid var(--line);border-radius:9px;padding:2px}
 .lang button{padding:6px 9px}
@@ -261,6 +262,7 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
       <button class="nav-btn" data-tab="emr" data-en="Clinician Dashboard" data-ar="لوحة الطبيب">Clinician Dashboard</button>
       <button class="nav-btn" data-tab="guide" data-en="Guide & Tutorial" data-ar="دليل الاستخدام والشرح">Guide & Tutorial</button>
       <button class="nav-btn" data-tab="pdpl" data-en="PDPL & Architecture" data-ar="الخصوصية والبنية">PDPL & Architecture</button>
+      <a class="nav-btn nav-ext" href="testing.html" target="_blank" rel="noopener" data-en="Testing & Validation (30 Scenarios) ↗" data-ar="الاختبار والتحقق (٣٠ سيناريو) ↗">Testing & Validation (30 Scenarios) ↗</a>
     </nav>
 
     <div class="head-actions">
@@ -1784,7 +1786,7 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
         waitEn: '0 min · Immediate Nurse Escort',
         waitAr: '٠ دقيقة · مرافقة فورية لطاقم الطوارئ',
         speechEn: 'Emergency case. Please proceed immediately to Resuscitation, Zone A.',
-        speechAr: 'حالة طارئة حرجة. يرجى التوجه فوراً إلى قسم الإنعاش، المنطقة (أ).'
+        speechAr: 'حالة طارئة حرجة. يرجى التوجه فوراً إلى قسم الإنعاش، المنطقة أَلِف.'
       };
     }
     if (level === 'priority' || level === 'unclassified') {
@@ -1800,7 +1802,7 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
         waitEn: `Queue #${sameTierPending + 1} · Est. ~${estMins} mins`,
         waitAr: `الترتيب #${sameTierPending + 1} · الانتظار التقريبي ~${estMins} دقيقة`,
         speechEn: `Priority case. Please proceed to the waiting area in Zone B. Estimated wait time is ${estMins} minutes.`,
-        speechAr: `حالة مستعجلة. يرجى الانتظار في المنطقة (ب) للتقييم الطبي. وقت الانتظار التقريبي ${estMins} دقيقة.`
+        speechAr: `حالة مستعجلة. يرجى الانتظار في المنطقة باء للتقييم الطبي. وقت الانتظار التقريبي ${estMins} دقيقة.`
       };
     }
     const num = String(300 + (numSeed % 89));
@@ -1815,7 +1817,7 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
       waitEn: `Queue #${sameTierPending + 1} · Est. ~${estMins} mins`,
       waitAr: `الترتيب #${sameTierPending + 1} · الانتظار التقريبي ~${estMins} دقيقة`,
       speechEn: `Standard case. Please proceed to the Fast-Track clinic in Zone C. Estimated wait time is ${estMins} minutes.`,
-      speechAr: `حالة اعتيادية ومستقرة. يرجى التوجه إلى عيادة المسار السريع في المنطقة (ج). وقت الانتظار التقريبي ${estMins} دقيقة.`
+      speechAr: `حالة اعتيادية ومستقرة. يرجى التوجه إلى عيادة المسار السريع في المنطقة جيم. وقت الانتظار التقريبي ${estMins} دقيقة.`
     };
   }
 
@@ -4013,7 +4015,7 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
 
     // Event bindings
     document
-      .querySelectorAll('.nav-btn')
+      .querySelectorAll('.nav-btn:not(.nav-ext)')
       .forEach((b) => b.addEventListener('click', () => showView(b.dataset.tab)));
     $('lang-en').addEventListener('click', () => setLang('en'));
     $('lang-ar').addEventListener('click', () => setLang('ar'));
