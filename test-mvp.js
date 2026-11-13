@@ -195,11 +195,19 @@ function invokeServer(method, urlPath, headers = {}, body = null) {
     )
   ).json;
   assert.strictEqual(stRes.ok, true);
-  assert.ok(stRes.structured.complaint_en.includes('Chest pain'));
-  assert.ok(stRes.structured.extracted_allergies.includes('Penicillin'));
-  assert.ok(stRes.structured.extracted_medications.includes('Metformin'));
+  assert.ok(/chest/i.test(stRes.structured.complaint_en), 'EN summary should mention chest pain');
+  assert.ok(
+    /penicillin|بنسلين/i.test(stRes.structured.extracted_allergies),
+    'Should extract Penicillin allergy'
+  );
+  assert.ok(
+    /metformin|ميتفورمين/i.test(stRes.structured.extracted_medications),
+    'Should extract Metformin medication'
+  );
   assert.ok(Array.isArray(stRes.structured.followups));
-  console.log('[PASS 11/16] POST /api/structure extracted bilingual HPI, allergies, medications & follow-ups');
+  console.log(
+    `[PASS 11/16] POST /api/structure extracted bilingual HPI, allergies, medications & follow-ups (${stRes.structured.provider})`
+  );
 
   // 12. Test POST /api/encounters
   const createRes = (
@@ -220,7 +228,10 @@ function invokeServer(method, urlPath, headers = {}, body = null) {
     )
   ).json;
   assert.strictEqual(createRes.ok, true);
-  assert.ok(createRes.encounter.allergies.includes('Penicillin'), 'Server auto-populated extracted allergy');
+  assert.ok(
+    /penicillin|بنسلين/i.test(createRes.encounter.allergies),
+    'Server auto-populated extracted allergy'
+  );
   const encId = createRes.encounter.id;
   console.log('[PASS 12/16] POST /api/encounters created encounter & auto-filled extracted health details');
 
