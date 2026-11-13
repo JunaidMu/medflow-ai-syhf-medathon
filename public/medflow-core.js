@@ -516,6 +516,204 @@
     return [...new Set(e)];
   }
 
+  function news2(p) {
+    // Royal College of Physicians National Early Warning Score 2 (NEWS2) on available vitals
+    const v = { ...(p.vitals || {}), ...(p.measuredVitals || {}) };
+    let score = 0;
+    let singleRed = false;
+    const partsEn = [];
+    const partsAr = [];
+
+    function add(pts, labelEn, labelAr) {
+      score += pts;
+      if (pts === 3) singleRed = true;
+      if (pts > 0) {
+        partsEn.push(`${labelEn} (+${pts})`);
+        partsAr.push(`${labelAr} (+${pts})`);
+      }
+    }
+
+    if (v.rr != null) {
+      const rr = Number(v.rr);
+      if (rr <= 8 || rr >= 25) add(3, `RR ${rr}`, `التنفس ${rr}`);
+      else if (rr >= 21 && rr <= 24) add(2, `RR ${rr}`, `التنفس ${rr}`);
+      else if (rr >= 9 && rr <= 11) add(1, `RR ${rr}`, `التنفس ${rr}`);
+    }
+    if (v.spo2 != null) {
+      const sp = Number(v.spo2);
+      if (sp <= 91) add(3, `SpO₂ ${sp}%`, `الأكسجين ${sp}%`);
+      else if (sp >= 92 && sp <= 93) add(2, `SpO₂ ${sp}%`, `الأكسجين ${sp}%`);
+      else if (sp >= 94 && sp <= 95) add(1, `SpO₂ ${sp}%`, `الأكسجين ${sp}%`);
+    }
+    if (v.sbp != null) {
+      const sbp = Number(v.sbp);
+      if (sbp <= 90 || sbp >= 220) add(3, `SBP ${sbp}`, `الضغط ${sbp}`);
+      else if (sbp >= 91 && sbp <= 100) add(2, `SBP ${sbp}`, `الضغط ${sbp}`);
+      else if (sbp >= 101 && sbp <= 110) add(1, `SBP ${sbp}`, `الضغط ${sbp}`);
+    }
+    if (v.hr != null) {
+      const hr = Number(v.hr);
+      if (hr <= 40 || hr >= 131) add(3, `HR ${hr}`, `النبض ${hr}`);
+      else if (hr >= 111 && hr <= 130) add(2, `HR ${hr}`, `النبض ${hr}`);
+      else if ((hr >= 41 && hr <= 50) || (hr >= 91 && hr <= 110)) add(1, `HR ${hr}`, `النبض ${hr}`);
+    }
+    if (v.temp != null) {
+      const t = Number(v.temp);
+      if (t <= 35.0) add(3, `Temp ${t}°C`, `الحرارة ${t}`);
+      else if (t >= 39.1) add(2, `Temp ${t}°C`, `الحرارة ${t}`);
+      else if ((t >= 35.1 && t <= 36.0) || (t >= 38.1 && t <= 39.0)) add(1, `Temp ${t}°C`, `الحرارة ${t}`);
+    }
+
+    const assessedCount = ['rr', 'spo2', 'sbp', 'hr', 'temp'].filter((k) => v[k] != null).length;
+    const risk =
+      score >= 7
+        ? 'high'
+        : score >= 5 || singleRed
+        ? 'medium'
+        : assessedCount > 0
+        ? 'low'
+        : 'unassessed';
+
+    return {
+      score,
+      assessedCount,
+      singleRed,
+      risk,
+      breakdownEn: partsEn.length ? partsEn.join(' · ') : assessedCount ? 'All entered vitals within normal NEWS2 range (0)' : 'No vitals entered yet',
+      breakdownAr: partsAr.length ? partsAr.join(' · ') : assessedCount ? 'جميع العلامات المدخلة في النطاق الطبيعي (٠)' : 'لم تُدخل علامات حيوية بعد'
+    };
+  }
+
+  function clinicalInsights(p) {
+    // Preliminary ICD-10-AM Symptom Codes (Saudi NPHIES standard) & Drug/Allergy Safety Alerts
+    const raw = text(p.complaint).toLowerCase().normalize('NFKC').replace(/[ًٌٍَُِّْـ]/g, '').replace(/[أإآ]/g, 'ا');
+    const negChest =
+      /\b(?:no|denies|without)\s+(?:chest\s+(?:pain|pressure))\b/i.test(raw) ||
+      /(?:لا اعاني من|لا يوجد|بدون)\s+(?:الم في الصدر|وجع في الصدر)/.test(raw);
+    const negSob =
+      /\b(?:no|denies|without)\s+(?:shortness of breath|difficulty breathing)\b/i.test(raw) ||
+      /(?:لا اعاني من|لا يوجد|بدون)\s+(?:ضيق في التنفس|صعوبه في التنفس|كتمه)/.test(raw);
+
+    const codes = [];
+    if (!negChest && (/chest\s*(?:pain|pressure)/i.test(raw) || /الم.{0,16}صدر|ضغط.{0,16}صدر/.test(raw))) {
+      codes.push({ code: 'R07.9', displayEn: 'Chest pain, unspecified', displayAr: 'ألم في الصدر غير محدد' });
+    }
+    if (!negSob && (/shortness of breath|difficulty breathing|dyspnea/i.test(raw) || /ضيق.{0,12}تنفس|صعوبه.{0,12}تنفس|كتمه/.test(raw))) {
+      codes.push({ code: 'R06.02', displayEn: 'Shortness of breath / Dyspnea', displayAr: 'ضيق في التنفس' });
+    }
+    if (/wheez|asthma|ربو|صفير/.test(raw)) {
+      codes.push({ code: 'J45.901', displayEn: 'Acute bronchospasm / Wheezing', displayAr: 'تضيق قصبي حاد / صفير صدري' });
+    }
+    if (/fever|حمى|حراره/.test(raw)) {
+      codes.push({ code: 'R50.9', displayEn: 'Fever, unspecified', displayAr: 'حمى غير محددة' });
+    }
+    if (/vomit|nausea|قيء|غثيان|استفراغ/.test(raw)) {
+      codes.push({ code: 'R11.2', displayEn: 'Nausea with vomiting', displayAr: 'غثيان مصحوب بقيء' });
+    }
+    if (/abdominal|stomach|بطن|معده/.test(raw)) {
+      codes.push({ code: 'R10.9', displayEn: 'Abdominal pain, unspecified', displayAr: 'ألم بطني غير محدد' });
+    }
+    if (/headache|dizz|صداع|دوخه/.test(raw)) {
+      codes.push({ code: 'R51 / R42', displayEn: 'Headache / Dizziness', displayAr: 'صداع / دوار' });
+    }
+    if (/ankle|sprain|كاحل|التواء/.test(raw)) {
+      codes.push({ code: 'S93.40', displayEn: 'Sprain of ankle', displayAr: 'التواء الكاحل' });
+    }
+    if (codes.length === 0) {
+      codes.push({ code: 'R69', displayEn: 'General emergency presentation', displayAr: 'شكوى طوارئ عامة للمراجعة' });
+    }
+
+    const alerts = [];
+    const al = text(p.allergies || p.structured?.extracted_allergies || '').toLowerCase();
+    if (al && !/not provided|غير مذكور|nkda|no known|لا توجد/.test(al)) {
+      alerts.push({
+        type: 'allergy',
+        en: `⚠️ Allergy Alert: ${p.allergies || p.structured?.extracted_allergies}`,
+        ar: `⚠️ تنبيه حساسية دوائية: ${p.allergies || p.structured?.extracted_allergies}`
+      });
+    }
+    const meds = text(p.medications || p.structured?.extracted_medications || '').toLowerCase();
+    if (/aspirin|warfarin|apixaban|clopidogrel|اسبرين|وارفارين|مسيل/.test(meds)) {
+      alerts.push({
+        type: 'med',
+        en: '💊 Antiplatelet / Anticoagulant use noted (Aspirin/Blood thinner)',
+        ar: '💊 يستخدم مسيلات الدم / الأسبرين (يرجى الانتباه لخطر النزيف أو البروتوكول القلبي)'
+      });
+    }
+    return { codes, alerts };
+  }
+
+  function surgeWave() {
+    // 5 realistic Jeddah / Umrah mass-gathering ED surge arrivals for Track 1 stress testing
+    return [
+      normalize({
+        name: 'SURGE · Pilgrim Mansour (Haramain Train Arrival)',
+        nid: '2000008814',
+        age: 68,
+        sex: 'male',
+        complaint: 'أعاني من ألم شديد في منتصف الصدر مع تعرق غزير وضيق في التنفس منذ ٣٠ دقيقة بعد الوصول لجدة. لدي ضغط وسكري وحساسية من البنسلين.',
+        allergies: 'Penicillin (بنسلين)',
+        medications: 'Aspirin 81mg, Amlodipine 5mg',
+        history: 'HTN, Type 2 DM',
+        vitals: { hr: 126, sbp: 88, dbp: 58, spo2: 90, temp: 37.0, rr: 26, pain: 9 },
+        doorToIntakeSec: 34,
+        source: 'scenario'
+      }),
+      normalize({
+        name: 'SURGE · Patient Layan (Jeddah Corniche)',
+        nid: '1000006631',
+        age: 24,
+        sex: 'female',
+        complaint: 'حمى شديدة مع صداع ودوخة وإرهاق عام منذ أمس بسبب الإجهاد الحراري، مع غثيان بدون ألم في الصدر.',
+        allergies: 'لا توجد حساسية معروفة (NKDA)',
+        medications: 'Paracetamol',
+        history: 'None',
+        vitals: { hr: 112, sbp: 114, dbp: 72, spo2: 98, temp: 39.2, rr: 20, pain: 6 },
+        doorToIntakeSec: 39,
+        source: 'scenario'
+      }),
+      normalize({
+        name: 'SURGE · Visitor Tariq (King Abdulaziz Airport)',
+        nid: '2000003391',
+        age: 51,
+        sex: 'male',
+        complaint: 'Severe shortness of breath and wheezing for 1 hour after dust exposure, history of asthma, denies chest pain.',
+        allergies: 'Sulfa drugs',
+        medications: 'Salbutamol inhaler',
+        history: 'Bronchial Asthma',
+        vitals: { hr: 122, sbp: 142, dbp: 88, spo2: 91, temp: 37.1, rr: 27, pain: 5 },
+        doorToIntakeSec: 36,
+        source: 'scenario'
+      }),
+      normalize({
+        name: 'SURGE · Patient Nawaf (Al-Hamra District)',
+        nid: '1000005109',
+        age: 35,
+        sex: 'male',
+        complaint: 'ألم شديد في البطن مع قيء متكرر منذ ٤ ساعات، لا أعاني من ألم في الصدر أو ضيق في التنفس.',
+        allergies: 'NKDA',
+        medications: 'None',
+        history: 'Gastritis',
+        vitals: { hr: 102, sbp: 118, dbp: 76, spo2: 99, temp: 38.2, rr: 18, pain: 7 },
+        doorToIntakeSec: 44,
+        source: 'scenario'
+      }),
+      normalize({
+        name: 'SURGE · Patient Sara (KAU Campus)',
+        nid: '1000002944',
+        age: 21,
+        sex: 'female',
+        complaint: 'التواء بسيط في الرسغ الأيمن بعد سقوط خفيف، تورم بسيط، لا يوجد نزيف أو فقدان وعي أو ألم في الصدر.',
+        allergies: 'NKDA',
+        medications: 'None',
+        history: 'Healthy',
+        vitals: { hr: 80, sbp: 116, dbp: 74, spo2: 99, temp: 36.8, rr: 15, pain: 3 },
+        doorToIntakeSec: 31,
+        source: 'scenario'
+      })
+    ];
+  }
+
   function flag(p) {
     let s = text(p.complaint)
       .toLowerCase()
@@ -530,22 +728,25 @@
     ];
     s = s
       .replace(
-        /\b(?:no|denies|without)\s+(?:chest\s+(?:pain|pressure)|shortness of breath|difficulty breathing|heavy bleeding|severe bleeding|stroke symptoms)\b/g,
+        /\b(?:no|denies|without)\s+(?:chest\s+(?:pain|pressure)|shortness of breath|difficulty breathing|heavy bleeding|severe bleeding|stroke symptoms)(?:\s*(?:or|nor|,|and)\s*(?:chest\s+(?:pain|pressure)|shortness of breath|difficulty breathing|heavy bleeding|severe bleeding|loss of consciousness|stroke symptoms))*/gi,
         ''
       )
       .replace(
-        /(?:لا اعاني من|لا يوجد|بدون)\s+(?:الم في الصدر|ضيق في التنفس|نزيف شديد)/g,
+        /(?:لا اعاني من|لا يوجد|بدون)\s+(?:الم في الصدر|ضيق في التنفس|نزيف شديد|نزيف|فقدان وعي)(?:\s*(?:او|ولا|و)\s*(?:الم في الصدر|ضيق في التنفس|نزيف شديد|نزيف|فقدان وعي))*/g,
         ''
       );
     const red = terms.some((r) => r.test(s));
     const v = { ...(p.vitals || {}), ...(p.measuredVitals || {}) };
+    const n2 = news2(p);
     const abnormal =
       (v.spo2 != null && v.spo2 < 92) ||
       (v.sbp != null && v.sbp < 90) ||
       (v.hr != null && (v.hr < 50 || v.hr > 130)) ||
       (v.rr != null && (v.rr < 8 || v.rr > 30)) ||
       (v.temp != null && v.temp >= 40) ||
-      (v.pain != null && v.pain >= 9 && red);
+      (v.pain != null && v.pain >= 9 && red) ||
+      n2.score >= 7 ||
+      n2.singleRed;
 
     if (red || abnormal) return { level: 'immediate', reason: red ? 'complaint' : 'vitals' };
 
@@ -553,7 +754,8 @@
     if (
       /fever|vomit|abdominal pain|pain|dizz|headache|حمى|حراره|قيء|الم|دوخه|صداع/.test(s) ||
       (v.temp != null && v.temp >= 38.5) ||
-      (v.pain != null && v.pain >= 7)
+      (v.pain != null && v.pain >= 7) ||
+      n2.score >= 5
     ) {
       deterministicLevel = 'priority';
     } else if (/ankle|sprain|minor|cough|cold|كاحل|التواء|زكام/.test(s)) {
@@ -704,8 +906,13 @@
     }
 
     const f = flag(p);
+    const n2 = news2(p);
+    const insights = clinicalInsights(p);
     const ticket = routingTicket(p);
     const aiRationale = st ? (ar ? st.ai_rationale_ar : st.ai_rationale_en) : '';
+    const icdLine = insights.codes
+      .map((c) => `${c.code} (${ar ? c.displayAr : c.displayEn})`)
+      .join(' · ');
 
     return {
       s:
@@ -724,13 +931,17 @@
               : 'Patient-entered values, unverified: ') +
             entered
           : ''),
-      o: measured
-        ? (ar
-            ? 'قياسات أكدها الطبيب التجريبي: '
-            : 'Measurements confirmed by demo clinician: ') + measured
-        : ar
-        ? 'لم يُقيّم بعد. بانتظار قياس العلامات الحيوية من الطاقم السريري.'
-        : 'Not yet assessed. Pending clinician measurement of vital signs.',
+      o:
+        (measured
+          ? (ar
+              ? 'قياسات أكدها الطبيب التجريبي: '
+              : 'Measurements confirmed by demo clinician: ') + measured
+          : ar
+          ? 'لم يُقيّم بعد. بانتظار قياس العلامات الحيوية من الطاقم السريري.'
+          : 'Not yet assessed. Pending clinician measurement of vital signs.') +
+        `\n• NEWS2 Score: ${n2.score} (${n2.risk.toUpperCase()}) — ${
+          ar ? n2.breakdownAr : n2.breakdownEn
+        }`,
       a:
         (f.level === 'immediate'
           ? ar
@@ -741,7 +952,8 @@
           : 'Complaint requires clinician assessment. No automated diagnosis.') +
         (aiRationale
           ? `\n(${ar ? 'تحليل المساعد الذكي: ' : 'AI Intake Triage Note: '}${aiRationale})`
-          : ''),
+          : '') +
+        `\n• ${ar ? 'ترميز الأعراض الأولي (ICD-10-AM / نفيس)' : 'Preliminary NPHIES / ICD-10-AM Symptom Codes'}: ${icdLine}`,
       p:
         (f.level === 'immediate'
           ? ar
@@ -846,6 +1058,7 @@
       name: [{ text: p.review?.reviewer || 'Demo Clinician' }]
     };
     const ticket = routingTicket(p);
+    const insights = clinicalInsights(p);
     const encounter = {
       resourceType: 'Encounter',
       id: eid,
@@ -864,6 +1077,16 @@
           }
         ]
       },
+      reasonCode: insights.codes.map((c) => ({
+        coding: [
+          {
+            system: 'http://hl7.org/fhir/sid/icd-10-am',
+            code: c.code,
+            display: c.displayEn
+          }
+        ],
+        text: `${c.displayEn} / ${c.displayAr}`
+      })),
       location: [
         {
           location: {
@@ -1012,6 +1235,9 @@
     localStructure,
     normalize,
     validate,
+    news2,
+    clinicalInsights,
+    surgeWave,
     flag,
     routingTicket,
     qrSvg,

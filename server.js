@@ -744,7 +744,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true, audit: db.audit });
     }
 
-    // 10. Load Seed Patients / Reset Demo Data
+    // 10. Load Seed Patients / Simulate Surge / Reset Demo Data
     if (req.method === 'POST' && pathname === '/api/seed') {
       const seeds = MedFlow.seed();
       db.queue.push(...seeds);
@@ -752,6 +752,20 @@ const server = http.createServer(async (req, res) => {
       addAudit('demo.seeds_loaded', 'Demo User', null, 'Three fictional Jeddah ED encounters added');
       broadcastState('seed');
       return sendJson(res, 200, { ok: true, queue: db.queue, audit: db.audit });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/surge') {
+      const wave = MedFlow.surgeWave();
+      db.queue.unshift(...wave);
+      db.queue = db.queue.slice(0, 200);
+      addAudit(
+        'surge.simulated',
+        'Demo Clinician',
+        null,
+        `Jeddah ED mass-gathering surge simulated (+${wave.length} arrivals across Zones A, B, and C)`
+      );
+      broadcastState('surge');
+      return sendJson(res, 200, { ok: true, added: wave.length, queue: db.queue, audit: db.audit });
     }
 
     if (req.method === 'POST' && pathname === '/api/reset') {
