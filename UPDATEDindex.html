@@ -125,6 +125,12 @@ details .form-grid{margin-top:14px}
 .bar-fill.red{background:#f87171}
 .bar-fill.amber{background:#fbbf24}
 .bar-fill.green{background:#34d399}
+/* Interactive Guide & Floating Tour Bar */
+.tour-bar{position:sticky;top:74px;z-index:50;margin-bottom:20px;padding:14px 20px;border:1px solid #22d3ee88;background:linear-gradient(135deg,#0b2239f2,#0f172af5);border-radius:18px;box-shadow:0 20px 50px #000a;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
+.guide-step{border:1px solid var(--line);background:#02061766;border-radius:14px;padding:16px;margin-top:14px;display:flex;gap:13px;align-items:flex-start}
+.guide-step h3{font-size:14px;margin-bottom:4px;color:#f8fafc}
+.guide-step p{font-size:12px;color:#a8b6ca;line-height:1.6;margin-bottom:10px}
 .btn{border:1px solid #3c4c66;background:#142035;color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:600;display:inline-flex;gap:8px;align-items:center;justify-content:center;transition:background .18s,transform .18s}
 .btn:hover{background:#24334b;transform:translateY(-1px)}
 .btn.primary{background:#10b981;color:#021d17;border-color:#34d399;box-shadow:0 0 27px #10b98117}
@@ -229,7 +235,7 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
 }
 @media(min-width:1600px){.container{max-width:1450px}.header-inner{max-width:1506px}.kiosk-inner{padding:29px}}
 @media(max-width:1120px){.header-inner{gap:12px}nav{order:3;width:100%;justify-content:center}.privacy-grid{grid-template-columns:1fr 1fr}.architecture{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}.zone-bars{grid-template-columns:1fr}}
-@media(max-width:850px){.container{padding:22px 18px}.layout{grid-template-columns:1fr}.title-row{align-items:flex-start}.title-row>.badge{display:none}.detail-grid{grid-template-columns:1fr}.privacy-grid{grid-template-columns:1fr}.side{position:static}.kiosk-inner{padding:22px}.header-inner{padding:15px 18px}}
+@media(max-width:850px){.container{padding:22px 18px}.layout{grid-template-columns:1fr}.title-row{align-items:flex-start}.title-row>.badge{display:none}.detail-grid{grid-template-columns:1fr}.privacy-grid{grid-template-columns:1fr}.guide-grid{grid-template-columns:1fr}.side{position:static}.kiosk-inner{padding:22px}.header-inner{padding:15px 18px}}
 @media(max-width:480px){.brand strong{font-size:18px}.brand .eyebrow{max-width:155px;font-size:8px}.nav-btn{font-size:10px;padding:8px}.head-actions{gap:5px}.form-grid{grid-template-columns:1fr}.field.wide{grid-column:auto}.vitals-grid{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr;gap:8px}.stat{padding:13px}.stat b{font-size:22px}.architecture{grid-template-columns:1fr}.kiosk-inner{padding:18px}.container{padding:20px 12px}.card{padding:19px}.title-row h1{font-size:28px}.feature-grid strong{font-size:10px}.toolbar input,.toolbar select{max-width:100%}.panel-head{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
@@ -253,6 +259,7 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
     <nav aria-label="Main navigation">
       <button class="nav-btn" data-tab="kiosk" aria-current="page" data-en="Patient Intake Kiosk" data-ar="كشك استقبال المريض">Patient Intake Kiosk</button>
       <button class="nav-btn" data-tab="emr" data-en="Clinician Dashboard" data-ar="لوحة الطبيب">Clinician Dashboard</button>
+      <button class="nav-btn" data-tab="guide" data-en="Guide & Tutorial" data-ar="دليل الاستخدام والشرح">Guide & Tutorial</button>
       <button class="nav-btn" data-tab="pdpl" data-en="PDPL & Architecture" data-ar="الخصوصية والبنية">PDPL & Architecture</button>
     </nav>
 
@@ -278,6 +285,21 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
     </div>
     <span id="save-status" class="save-status" role="status"></span>
   </div>
+
+  <!-- FLOATING INTERACTIVE TOUR BANNER -->
+  <aside id="tour-bar" class="tour-bar reveal" aria-live="polite" hidden>
+    <div>
+      <span id="tour-step-badge" class="badge purple">Step 1 of 4</span>
+      <strong id="tour-title" style="display:block;font-size:15px;margin-top:5px"></strong>
+      <p id="tour-desc" class="helper" style="color:#e2e8f0;margin-top:3px"></p>
+    </div>
+    <div class="row">
+      <button id="tour-action" type="button" class="btn compact primary" data-en="✨ Run This Step" data-ar="✨ تطبيق هذه الخطوة">✨ Run This Step</button>
+      <button id="tour-prev" type="button" class="btn compact subtle" data-en="← Prev" data-ar="→ السابق">← Prev</button>
+      <button id="tour-next" type="button" class="btn compact cyan" data-en="Next →" data-ar="التالي ←">Next →</button>
+      <button id="tour-close" type="button" class="btn compact danger" data-en="✕ End Tour" data-ar="✕ إنهاء الجولة">✕ End Tour</button>
+    </div>
+  </aside>
 
   <!-- VIEW 1: PATIENT INTAKE KIOSK -->
   <section id="view-kiosk" class="view" aria-labelledby="kiosk-title">
@@ -367,10 +389,10 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
 
             <div class="voice-panel">
               <div class="voice-head">
-                <span class="eyebrow" style="margin:0" data-en="Voice AI Capture · OpenAI Whisper + Live Speech" data-ar="التقاط صوتي ذكي · OpenAI Whisper والتعرف الفوري">Voice AI Capture · OpenAI Whisper + Live Speech</span>
-                <select id="voice-lang" aria-label="Speech language" style="width:auto;padding:4px 8px;font-size:11px">
-                  <option value="ar" data-en="Voice: Arabic (السعودية)" data-ar="الصوت: العربية (السعودية)">Voice: Arabic (السعودية)</option>
-                  <option value="en" data-en="Voice: English" data-ar="الصوت: الإنجليزية">Voice: English</option>
+                <span class="eyebrow" style="margin:0" data-en="Voice AI Capture · OpenAI Whisper + Auto-Translate to Tab Language" data-ar="التقاط صوتي ذكي · تفريغ وترجمة تلقائية للغة التبويب">Voice AI Capture · OpenAI Whisper + Auto-Translate to Tab Language</span>
+                <select id="voice-lang" aria-label="Transcript output language" style="width:auto;padding:4px 8px;font-size:11px">
+                  <option value="ar" data-en="Output Transcript: Arabic (العربية)" data-ar="نص التفريغ: بالعربية (حتى لو تحدثت بالإنجليزية)">Output Transcript: Arabic (العربية)</option>
+                  <option value="en" data-en="Output Transcript: English" data-ar="نص التفريغ: بالإنجليزية">Output Transcript: English</option>
                 </select>
               </div>
               <div class="row">
@@ -475,9 +497,11 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
             <div id="ticket-qr"></div>
           </div>
           <div class="row" style="margin-top:14px">
-            <button id="speak-ticket" type="button" class="btn compact cyan" data-en="🔊 Speak Instructions (AR/EN)" data-ar="🔊 قراءة التوجيه صوتياً">🔊 Speak Instructions (AR/EN)</button>
+            <button id="speak-ticket" type="button" class="btn compact cyan" data-en="🔊 نطق بالعربية (Arabic Audio)" data-ar="🔊 نطق التوجيه بالعربية">🔊 نطق بالعربية (Arabic Audio)</button>
+            <button id="speak-ticket-en" type="button" class="btn compact subtle" data-en="🔊 Speak in English" data-ar="🔊 نطق بالإنجليزية">🔊 Speak in English</button>
             <button id="print-ticket" type="button" class="btn compact subtle" data-en="🖨️ Print Ticket" data-ar="🖨️ طباعة التذكرة">🖨️ Print Ticket</button>
           </div>
+          <audio id="tts-audio-player" hidden></audio>
         </article>
 
         <article id="workflow-card" class="glass card">
@@ -663,6 +687,106 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
       <p class="helper" data-en="Records intake creation, OpenAI transcription, clinician access, urgency overrides, and FHIR R4 exports." data-ar="يسجل إنشاء الطلب، والتفريغ الصوتي، ودخول الطبيب، وتعديل الأولوية، وتصدير FHIR R4.">Records intake creation, OpenAI transcription, clinician access, urgency overrides, and FHIR R4 exports.</p>
       <ol id="audit-list"></ol>
     </article>
+  </section>
+
+  <!-- VIEW 2B: INTERACTIVE GUIDE & TUTORIAL -->
+  <section id="view-guide" class="view" hidden aria-labelledby="guide-title">
+    <div class="title-row">
+      <div>
+        <p class="eyebrow" data-en="Interactive Onboarding · Patients, Clinicians & Judges" data-ar="الدليل التفاعلي · للمرضى والأطباء ولجنة التحكيم">Interactive Onboarding · Patients, Clinicians & Judges</p>
+        <h1 id="guide-title" data-en="How to Use MedFlow AI (Step-by-Step Guide)" data-ar="دليل استخدام نظام MedFlow AI خطوة بخطوة">How to Use MedFlow AI (Step-by-Step Guide)</h1>
+        <p class="subtitle" data-en="New to the system? Launch the interactive 4-step live tour or explore the dedicated guides for self-check-in patients and emergency department clinicians below." data-ar="جديد على النظام؟ ابدأ الجولة التفاعلية المكونة من ٤ خطوات، أو استعرض دليل المريض ودليل الطبيب أدناه مع أزرار التجربة المباشرة.">New to the system? Launch the interactive 4-step live tour or explore the dedicated guides for self-check-in patients and emergency department clinicians below.</p>
+      </div>
+      <button id="start-tour-btn" type="button" class="btn primary" data-en="▶ Start Interactive 4-Step Live Tour" data-ar="▶ ابدأ الجولة التفاعلية المباشرة (٤ خطوات)">▶ Start Interactive 4-Step Live Tour</button>
+    </div>
+
+    <div class="guide-grid">
+      <!-- PATIENT GUIDE COLUMN -->
+      <article class="glass card">
+        <span class="badge demo" data-en="FOR PATIENTS · TABLET KIOSK" data-ar="للمرضى · كشك الاستقبال الذاتي">FOR PATIENTS · TABLET KIOSK</span>
+        <h2 style="margin-top:10px" data-en="👤 Patient Self-Check-In Guide" data-ar="👤 دليل المريض للتسجيل الذاتي">👤 Patient Self-Check-In Guide</h2>
+        <p class="helper" data-en="Designed to take ~40 seconds at the hospital entrance before seeing the triage nurse." data-ar="مصمم ليستغرق حوالي ٤٠ ثانية فقط عند مدخل الطوارئ قبل مقابلة ممرض الفرز.">Designed to take ~40 seconds at the hospital entrance before seeing the triage nurse.</p>
+
+        <div class="guide-step">
+          <span class="step">01</span>
+          <div>
+            <h3 data-en="Speak Naturally in Arabic or English" data-ar="تحدث بعفوية بالعربية أو الإنجليزية">Speak Naturally in Arabic or English</h3>
+            <p data-en="Press 'Record microphone' and describe your symptoms, duration, medications, and allergies. In the Arabic tab (العربية), even if you speak English, OpenAI automatically translates your transcript into Arabic (and vice versa in the EN tab)!" data-ar="اضغط «تسجيل بالميكروفون» واشرح أعراضك ومدتها وأدويتك والحساسية. في التبويب العربي، حتى لو تحدثت بالإنجليزية، يقوم الذكاء الاصطناعي بترجمة كلامك تلقائياً إلى العربية!">Press 'Record microphone' and describe your symptoms, duration, medications, and allergies. In the Arabic tab (العربية), even if you speak English, OpenAI automatically translates your transcript into Arabic (and vice versa in the EN tab)!</p>
+            <button type="button" class="btn compact cyan" data-guide-action="kiosk-voice" data-en="Try Voice & Scenario →" data-ar="جرّب الصوت والسيناريو ←">Try Voice & Scenario →</button>
+          </div>
+        </div>
+
+        <div class="guide-step">
+          <span class="step">02</span>
+          <div>
+            <h3 data-en="Use Touch Helpers (Quick Pills & 0–10 Pain Scale)" data-ar="استخدم المساعد اللمسي ومقياس شدة الألم (٠–١٠)">Use Touch Helpers (Quick Pills & 0–10 Pain Scale)</h3>
+            <p data-en="Don't want to type in a noisy ER? Tap the quick body-symptom buttons (Chest Pain, Shortness of Breath, Fever) and tap your pain score from 0 (Green) to 10 (Red)." data-ar="لا ترغب بالكتابة؟ اضغط على أزرار الأعراض السريعة (ألم بالصدر، ضيق تنفس، حمى) واختر درجة الألم من ٠ (أخضر) إلى ١٠ (أحمر).">Don't want to type in a noisy ER? Tap the quick body-symptom buttons (Chest Pain, Shortness of Breath, Fever) and tap your pain score from 0 (Green) to 10 (Red).</p>
+            <button type="button" class="btn compact cyan" data-guide-action="kiosk-pain" data-en="Try Touch Helpers →" data-ar="جرّب المساعد اللمسي ←">Try Touch Helpers →</button>
+          </div>
+        </div>
+
+        <div class="guide-step">
+          <span class="step">03</span>
+          <div>
+            <h3 data-en="Tap AI Follow-Up Clarifiers & Confirm Accuracy" data-ar="أجب عن الأسئلة التوضيحية الذكية وأكّد النص">Tap AI Follow-Up Clarifiers & Confirm Accuracy</h3>
+            <p data-en="The AI automatically fills your Allergies & Medications boxes and suggests 2–3 purple clarifier chips (e.g., '+ Started < 1 hour ago?'). Tap any chip to add it, then check the confirmation box." data-ar="يملأ الذكاء الاصطناعي حقول الحساسية والأدوية تلقائياً ويقترح ٢–٣ أسئلة توضيحية. اضغط على أي شريحة لإضافتها ثم ضع علامة التأكيد.">The AI automatically fills your Allergies & Medications boxes and suggests 2–3 purple clarifier chips (e.g., '+ Started < 1 hour ago?'). Tap any chip to add it, then check the confirmation box.</p>
+            <button type="button" class="btn compact purple" data-guide-action="kiosk-clarify" data-en="See AI Clarifier Chips →" data-ar="شاهد الشرائح التوضيحية ←">See AI Clarifier Chips →</button>
+          </div>
+        </div>
+
+        <div class="guide-step">
+          <span class="step">04</span>
+          <div>
+            <h3 data-en="Get Your QR Zone Ticket & Arabic/English Voice Readout" data-ar="احصل على تذكرة المسار ورموز QR والتوجيه الصوتي">Get Your QR Zone Ticket & Arabic/English Voice Readout</h3>
+            <p data-en="Submit the form to receive your boarding pass (Zone A Resuscitation, Zone B Priority, or Zone C Fast-Track) with an OpenAI neural voice readout in both Arabic and English!" data-ar="أرسل النموذج لتحصل على تذكرة التوجيه (المنطقة أ للإنعاش، ب للأولوية، ج للمسار السريع) مع قراءة صوتية طبيعية بالعربية والإنجليزية!">Submit the form to receive your boarding pass (Zone A Resuscitation, Zone B Priority, or Zone C Fast-Track) with an OpenAI neural voice readout in both Arabic and English!</p>
+            <button type="button" class="btn compact primary" data-guide-action="kiosk-ticket" data-en="Generate Sample Ticket & Audio →" data-ar="جرّب إصدار التذكرة والصوت ←">Generate Sample Ticket & Audio →</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- CLINICIAN GUIDE COLUMN -->
+      <article class="glass card">
+        <span class="badge green" data-en="FOR CLINICIANS · TRIAGE & EMR WORKSPACE" data-ar="للأطباء والتمريض · لوحة الفرز والسجل الطبي">FOR CLINICIANS · TRIAGE & EMR WORKSPACE</span>
+        <h2 style="margin-top:10px" data-en="🩺 Clinician & Triage Nurse Guide" data-ar="🩺 دليل الطبيب وممرض الفرز">🩺 Clinician & Triage Nurse Guide</h2>
+        <p class="helper" data-en="How to review incoming patient intakes, record objective vitals, and export FHIR R4 bundles." data-ar="كيفية مراجعة حالات الطوارئ الواردة، وتسجيل العلامات الحيوية المؤكدة، وتصدير ملفات FHIR R4.">How to review incoming patient intakes, record objective vitals, and export FHIR R4 bundles.</p>
+
+        <div class="guide-step">
+          <span class="step">01</span>
+          <div>
+            <h3 data-en="Live Priority Queue & Hospital Zone Load" data-ar="طابور الأولوية الفوري وعبء مناطق الطوارئ">Live Priority Queue & Hospital Zone Load</h3>
+            <p data-en="Patients with Immediate red flags automatically jump to the top of the queue. Monitor live capacity across Zone A, B, and C, plus total nurse triage minutes saved." data-ar="تنتقل الحالات الحرجة ذات الإنذار الفوري تلقائياً إلى أعلى القائمة. راقب إشغال المناطق (أ، ب، ج) والوقت الموفّر لطاقم التمريض.">Patients with Immediate red flags automatically jump to the top of the queue. Monitor live capacity across Zone A, B, and C, plus total nurse triage minutes saved.</p>
+            <button type="button" class="btn compact cyan" data-guide-action="emr-queue" data-en="Open Clinician Queue →" data-ar="افتح طابور الطوارئ ←">Open Clinician Queue →</button>
+          </div>
+        </div>
+
+        <div class="guide-step">
+          <span class="step">02</span>
+          <div>
+            <h3 data-en="3-Color Clinical Provenance & Bilingual SOAP" data-ar="توثيق مصدر المعلومة بـ ٣ ألوان وملاحظة SOAP بلغتين">3-Color Clinical Provenance & Bilingual SOAP</h3>
+            <p data-en="Every note section is color-coded so staff never confuse AI output with confirmed facts: Cyan = Patient-reported, Amber = System/AI suggestion, Green = Clinician-confirmed." data-ar="كل قسم ملون حسب مصدره لمنع الخلط: السماوي = إفادة المريض، الذهبي = اقتراح النظام، الأخضر = قياسات وتأكيد الطبيب.">Every note section is color-coded so staff never confuse AI output with confirmed facts: Cyan = Patient-reported, Amber = System/AI suggestion, Green = Clinician-confirmed.</p>
+            <button type="button" class="btn compact cyan" data-guide-action="emr-chart" data-en="Inspect Bilingual SOAP Note →" data-ar="افحص الملاحظة ثنائية اللغة ←">Inspect Bilingual SOAP Note →</button>
+          </div>
+        </div>
+
+        <div class="guide-step">
+          <span class="step">03</span>
+          <div>
+            <h3 data-en="Record Objective Vitals & Override Safety Guardrail" data-ar="تسجيل العلامات الحيوية وضابط تعديل الأولوية">Record Objective Vitals & Override Safety Guardrail</h3>
+            <p data-en="Enter clinician-measured vitals (HR, BP, SpO2) to populate the Objective section. If you change the AI's suggested urgency, the system enforces a mandatory clinical reason." data-ar="أدخل القياسات السريرية المؤكدة لتحديث قسم الفحص الموضوعي. عند تعديل درجة الاستعجال المقترحة، يُلزمك النظام بكتابة السبب السريري.">Enter clinician-measured vitals (HR, BP, SpO2) to populate the Objective section. If you change the AI's suggested urgency, the system enforces a mandatory clinical reason.</p>
+            <button type="button" class="btn compact purple" data-guide-action="emr-chart" data-en="Try Clinician Review Form →" data-ar="جرّب نموذج مراجعة الطبيب ←">Try Clinician Review Form →</button>
+          </div>
+        </div>
+
+        <div class="guide-step">
+          <span class="step">04</span>
+          <div>
+            <h3 data-en="Export NPHIES / HL7 FHIR R4 Bundle & Audit Log" data-ar="تصدير حزمة FHIR R4 المتوافقة مع نفيس وسجل التدقيق">Export NPHIES / HL7 FHIR R4 Bundle & Audit Log</h3>
+            <p data-en="Click 'Preview FHIR JSON' on any patient chart to generate a standards-compliant HL7 FHIR R4 Document Bundle with LOINC codes, or download the full timestamped audit trail." data-ar="اضغط «معاينة FHIR JSON» لتوليد حزمة مستندات قياسية بترميز LOINC جاهزة للربط مع أنظمة المستشفيات ونفيس.">Click 'Preview FHIR JSON' on any patient chart to generate a standards-compliant HL7 FHIR R4 Document Bundle with LOINC codes, or download the full timestamped audit trail.</p>
+            <button type="button" class="btn compact primary" data-guide-action="emr-fhir" data-en="Preview Live FHIR R4 JSON →" data-ar="معاينة ملف FHIR R4 الآن ←">Preview Live FHIR R4 JSON →</button>
+          </div>
+        </div>
+      </article>
+    </div>
   </section>
 
   <!-- VIEW 3: PDPL & ARCHITECTURE -->
@@ -2299,7 +2423,6 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
           const form = new FormData();
           form.append('file', blob, 'intake.webm');
           form.append('model', 'whisper-1');
-          if (langHint === 'ar' || langHint === 'en') form.append('language', langHint);
           const resp = await fetch('https://api.openai.com/v1/audio/transcriptions', {
             method: 'POST',
             headers: { Authorization: 'Bearer ' + state.clientOpenAIKey },
@@ -2308,11 +2431,44 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
           if (resp.ok) {
             const resData = await resp.json();
             if (resData.text) {
-              const st = M.localStructure(resData.text, getForm());
+              let finalText = resData.text;
+              const hasAr = /[\u0600-\u06FF]/.test(finalText);
+              const hasLat = /[a-zA-Z]{3,}/.test(finalText);
+              if ((langHint === 'ar' && hasLat) || (langHint === 'en' && hasAr && !hasLat)) {
+                try {
+                  const trResp = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                      Authorization: 'Bearer ' + state.clientOpenAIKey,
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                      model: 'gpt-4o-mini',
+                      temperature: 0.1,
+                      messages: [
+                        {
+                          role: 'system',
+                          content:
+                            langHint === 'ar'
+                              ? 'Translate the patient\'s first-person emergency complaint accurately into natural Saudi/Modern Standard Arabic (first-person, e.g., "أعاني من..."). Output ONLY the Arabic text.'
+                              : 'Translate the patient\'s first-person emergency complaint accurately into natural English (first-person, e.g., "I have..."). Output ONLY the English text.'
+                        },
+                        { role: 'user', content: finalText }
+                      ]
+                    })
+                  });
+                  if (trResp.ok) {
+                    const trData = await trResp.json();
+                    const translated = trData.choices?.[0]?.message?.content?.trim();
+                    if (translated) finalText = translated;
+                  }
+                } catch (_) {}
+              }
+              const st = M.localStructure(finalText, getForm());
               return {
                 mode: 'openai',
                 model: 'whisper-1',
-                text: resData.text,
+                text: finalText,
                 structured: st
               };
             }
@@ -2322,10 +2478,15 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
 
       if (state.liveSpeechTranscript && state.liveSpeechTranscript.trim()) {
         const txt = state.liveSpeechTranscript.trim();
+        const st = M.localStructure(txt, getForm());
+        const outText =
+          langHint === 'ar' && !/[\u0600-\u06FF]/.test(txt) && st?.complaint_ar
+            ? st.complaint_ar
+            : txt;
         return {
           mode: 'browser-stt',
-          text: txt,
-          structured: M.localStructure(txt, getForm())
+          text: outText,
+          structured: st
         };
       }
 
@@ -2359,6 +2520,7 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
       if (state.selected) renderDetail();
       if (state.last) renderReceipt();
       if (!state.recording) voiceStatus('idle');
+      if (typeof renderTour === 'function') renderTour();
       updateRedFlag();
     }
 
@@ -2650,23 +2812,98 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
         .forEach((b) => b.setAttribute('aria-pressed', b.dataset.noteLang === state.noteLang));
     }
 
-    function speakTicketInstructions() {
+    async function speakTicketInstructions(langOverride) {
       const p = state.queue.find((p) => p.id === state.last);
       if (!p) return;
+      const targetLang =
+        typeof langOverride === 'string' && (langOverride === 'ar' || langOverride === 'en')
+          ? langOverride
+          : state.lang === 'ar'
+          ? 'ar'
+          : 'ar'; // Default main button speaks Arabic when clicked, second button speaks English
       const t = M.routingTicket(p, state.queue);
-      const msg = state.lang === 'ar' ? t.speechAr : t.speechEn;
-      if ('speechSynthesis' in window) {
-        try {
+      const msg = targetLang === 'ar' ? t.speechAr : t.speechEn;
+      const btnAr = $('speak-ticket');
+      const btnEn = $('speak-ticket-en');
+      if (btnAr) btnAr.disabled = true;
+      if (btnEn) btnEn.disabled = true;
+
+      toast(
+        targetLang === 'ar'
+          ? 'Generating Arabic neural voice instructions…'
+          : 'Generating English voice instructions…',
+        targetLang === 'ar'
+          ? 'جارٍ تشغيل التوجيه الصوتي باللغة العربية…'
+          : 'جارٍ تشغيل التوجيه الصوتي باللغة الإنجليزية…'
+      );
+
+      try {
+        // 1. Try OpenAI Neural TTS via local MedFlow server (/api/tts)
+        if (state.serverConnected) {
+          const resp = await fetch('/api/tts', {
+            method: 'POST',
+            headers: apiHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({ text: msg, lang: targetLang })
+          });
+          const ct = resp.headers.get('content-type') || '';
+          if (resp.ok && ct.includes('audio')) {
+            const audioBlob = await resp.blob();
+            const url = URL.createObjectURL(audioBlob);
+            const player = $('tts-audio-player');
+            player.src = url;
+            await player.play();
+            player.onended = () => URL.revokeObjectURL(url);
+            return;
+          }
+        }
+
+        // 2. Try direct OpenAI TTS if standalone with client key
+        if (state.clientOpenAIKey && state.clientOpenAIKey.startsWith('sk-')) {
+          const resp = await fetch('https://api.openai.com/v1/audio/speech', {
+            method: 'POST',
+            headers: {
+              Authorization: 'Bearer ' + state.clientOpenAIKey,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: 'tts-1',
+              voice: targetLang === 'ar' ? 'onyx' : 'nova',
+              input: msg,
+              response_format: 'mp3'
+            })
+          });
+          if (resp.ok) {
+            const audioBlob = await resp.blob();
+            const url = URL.createObjectURL(audioBlob);
+            const player = $('tts-audio-player');
+            player.src = url;
+            await player.play();
+            player.onended = () => URL.revokeObjectURL(url);
+            return;
+          }
+        }
+
+        // 3. Fallback to Browser Web Speech Synthesis
+        if ('speechSynthesis' in window) {
           window.speechSynthesis.cancel();
           const u = new SpeechSynthesisUtterance(msg);
-          u.lang = state.lang === 'ar' ? 'ar-SA' : 'en-US';
+          u.lang = targetLang === 'ar' ? 'ar-SA' : 'en-US';
+          const voices = window.speechSynthesis.getVoices?.() || [];
+          const match = voices.find((v) =>
+            v.lang.toLowerCase().startsWith(targetLang === 'ar' ? 'ar' : 'en')
+          );
+          if (match) u.voice = match;
           u.rate = 0.96;
           window.speechSynthesis.speak(u);
-          toast('Speaking routing instructions aloud…', 'جارٍ قراءة توجيهات المسار صوتياً…');
           return;
-        } catch (_) {}
+        }
+        toast(msg, msg);
+      } catch (_) {
+        toast(msg, msg);
+      } finally {
+        if (btnAr) btnAr.disabled = false;
+        if (btnEn) btnEn.disabled = false;
       }
-      toast(msg, msg);
     }
 
     function renderQueue() {
@@ -3558,8 +3795,166 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
     $('load-demo').addEventListener('click', loadScenario);
     $('new-intake').addEventListener('click', reset);
     $('to-emr').addEventListener('click', () => ensureClinician(state.last));
-    $('speak-ticket').addEventListener('click', speakTicketInstructions);
+    $('speak-ticket').addEventListener('click', () => speakTicketInstructions('ar'));
+    if ($('speak-ticket-en')) {
+      $('speak-ticket-en').addEventListener('click', () => speakTicketInstructions('en'));
+    }
     $('print-ticket').addEventListener('click', () => window.print());
+
+    // Interactive Guide & 4-Step Live Tour
+    let tourStep = 0;
+    const tourSteps = [
+      {
+        badgeEn: 'Step 1 of 4 · Patient Kiosk Voice & Touch',
+        badgeAr: 'الخطوة ١ من ٤ · كشك المريض والصوت واللمس',
+        titleEn: 'Capture Patient Complaint (Voice or Quick-Tap)',
+        titleAr: 'التقاط شكوى المريض (صوتياً أو باللمس السريع)',
+        descEn: 'Patients speak in Arabic or English (auto-translated to the active tab language) or tap the quick symptom pills & 0–10 pain bar.',
+        descAr: 'يتحدث المريض بالعربية أو الإنجليزية (مع ترجمة تلقائية للغة التبويب) أو يختار الأعراض ومقياس الألم باللمس.',
+        run: async () => {
+          showView('kiosk');
+          await loadScenario();
+          $('voice-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      },
+      {
+        badgeEn: 'Step 2 of 4 · AI Structuring & Follow-Up Clarifiers',
+        badgeAr: 'الخطوة ٢ من ٤ · الهيكلة الذكية والأسئلة التوضيحية',
+        titleEn: 'Auto-Extracted Allergies, Meds & Smart Clarifier Chips',
+        titleAr: 'استخلاص الحساسية والأدوية والأسئلة التوضيحية الذكية',
+        descEn: 'OpenAI extracts English & Arabic summaries, auto-fills Allergies/Meds, and shows purple follow-up chips to complete missing details.',
+        descAr: 'يستخلص الذكاء الاصطناعي الملخص ثنائي اللغة والحساسية والأدوية، ويعرض شرائح أسئلة توضيحية لإكمال التفاصيل.',
+        run: async () => {
+          showView('kiosk');
+          if (!$('field-complaint').value) await loadScenario();
+          const firstChip = $('ai-followup-row')?.querySelector('button:not(.applied)');
+          if (firstChip) firstChip.click();
+          $('ai-preview-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      },
+      {
+        badgeEn: 'Step 3 of 4 · QR Zone Ticket & Arabic Neural Voice',
+        badgeAr: 'الخطوة ٣ من ٤ · تذكرة المسار والتوجيه الصوتي العربي',
+        titleEn: 'Confirm Intake, Issue QR Boarding Pass & Speak Arabic Audio',
+        titleAr: 'تأكيد الاستقبال وإصدار تذكرة المسار والتوجيه الصوتي العربي',
+        descEn: 'Submitting creates a Zone A/B/C routing ticket with a QR code and OpenAI Arabic/English neural voice instructions.',
+        descAr: 'يُنشئ الإرسال تذكرة توجيه للمنطقة (أ / ب / ج) مع رمز QR وتوجيه صوتي طبيعي باللغتين العربية والإنجليزية.',
+        run: async () => {
+          showView('kiosk');
+          if (!$('field-complaint').value) await loadScenario();
+          $('confirm-transcript').checked = true;
+          $('synthetic-only').checked = true;
+          $('submit-intake').disabled = false;
+          await submit(new Event('submit'));
+          setTimeout(() => speakTicketInstructions('ar'), 300);
+        }
+      },
+      {
+        badgeEn: 'Step 4 of 4 · Clinician Queue, Provenance & FHIR R4',
+        badgeAr: 'الخطوة ٤ من ٤ · لوحة الطبيب وتصدير FHIR R4',
+        titleEn: 'Clinician Priority Queue, Vitals Confirmation & FHIR R4 Export',
+        titleAr: 'طابور أولوية الأطباء وتأكيد العلامات الحيوية وتصدير FHIR R4',
+        descEn: 'Clinicians see Zone A/B/C load bars, review color-coded SOAP notes, record objective vitals, and export NPHIES / FHIR R4 JSON.',
+        descAr: 'يستعرض الطبيب إشغال المناطق، ويراجع ملاحظة SOAP الملونة حسب المصدر، ويسجل القياسات، ويصدر حزمة FHIR R4.',
+        run: async () => {
+          if (!state.role) state.role = 'Dr. Al-Ghamdi (Jeddah ED)';
+          showView('emr');
+          const targetId = state.last || state.queue[0]?.id;
+          if (targetId) openChart(targetId);
+        }
+      }
+    ];
+
+    function renderTour() {
+      const bar = $('tour-bar');
+      if (!bar || bar.hidden) return;
+      const st = tourSteps[tourStep];
+      $('tour-step-badge').textContent = T(st.badgeEn, st.badgeAr);
+      $('tour-title').textContent = T(st.titleEn, st.titleAr);
+      $('tour-desc').textContent = T(st.descEn, st.descAr);
+      $('tour-prev').disabled = tourStep === 0;
+      $('tour-next').textContent =
+        tourStep === tourSteps.length - 1 ? T('Finish ✓', 'إنهاء ✓') : T('Next →', 'التالي ←');
+    }
+
+    if ($('start-tour-btn')) {
+      $('start-tour-btn').addEventListener('click', async () => {
+        tourStep = 0;
+        $('tour-bar').hidden = false;
+        renderTour();
+        await tourSteps[0].run();
+      });
+    }
+    if ($('tour-action')) {
+      $('tour-action').addEventListener('click', () => tourSteps[tourStep]?.run());
+    }
+    if ($('tour-prev')) {
+      $('tour-prev').addEventListener('click', async () => {
+        if (tourStep > 0) {
+          tourStep--;
+          renderTour();
+          await tourSteps[tourStep].run();
+        }
+      });
+    }
+    if ($('tour-next')) {
+      $('tour-next').addEventListener('click', async () => {
+        if (tourStep < tourSteps.length - 1) {
+          tourStep++;
+          renderTour();
+          await tourSteps[tourStep].run();
+        } else {
+          $('tour-bar').hidden = true;
+          toast('Interactive tour completed!', 'اكتملت الجولة التفاعلية بنجاح!');
+        }
+      });
+    }
+    if ($('tour-close')) {
+      $('tour-close').addEventListener('click', () => {
+        $('tour-bar').hidden = true;
+      });
+    }
+
+    document.querySelectorAll('[data-guide-action]').forEach((b) => {
+      b.addEventListener('click', async () => {
+        const act = b.dataset.guideAction;
+        if (act === 'kiosk-voice') {
+          showView('kiosk');
+          await loadScenario();
+          $('voice-btn').focus();
+        } else if (act === 'kiosk-pain') {
+          showView('kiosk');
+          $('quick-symptom-pills')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (act === 'kiosk-clarify') {
+          showView('kiosk');
+          await loadScenario();
+          $('ai-preview-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (act === 'kiosk-ticket') {
+          showView('kiosk');
+          await loadScenario();
+          $('confirm-transcript').checked = true;
+          $('synthetic-only').checked = true;
+          $('submit-intake').disabled = false;
+          await submit(new Event('submit'));
+        } else if (act === 'emr-queue') {
+          if (!state.role) state.role = 'Dr. Al-Ghamdi (Jeddah ED)';
+          showView('emr');
+        } else if (act === 'emr-chart') {
+          if (!state.role) state.role = 'Dr. Al-Ghamdi (Jeddah ED)';
+          showView('emr');
+          const id = state.last || state.queue[0]?.id;
+          if (id) openChart(id);
+        } else if (act === 'emr-fhir') {
+          if (!state.role) state.role = 'Dr. Al-Ghamdi (Jeddah ED)';
+          showView('emr');
+          const id = state.last || state.queue[0]?.id;
+          if (id) {
+            openChart(id);
+            previewFHIR(id);
+          }
+        }
+      });
+    });
     document.querySelectorAll('[data-note-lang]').forEach((b) =>
       b.addEventListener('click', () => {
         state.noteLang = b.dataset.noteLang;
@@ -3644,6 +4039,7 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
     });
 
     loadLocal();
+    if ($('voice-lang')) $('voice-lang').value = state.lang;
     renderVitals($('intake-vitals'), 'field-');
     translate();
     connectBackend();

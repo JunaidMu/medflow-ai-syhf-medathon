@@ -178,6 +178,19 @@ function invokeServer(method, urlPath, headers = {}, body = null) {
   assert.ok(sttRes.mode === 'no-api-key' || sttRes.mode === 'openai' || sttRes.mode === 'openai-error');
   console.log(`[PASS] POST /api/transcribe handled audio payload cleanly (mode: ${sttRes.mode})`);
 
+  const ttsRes = await invokeServer(
+    'POST',
+    '/api/tts',
+    { 'content-type': 'application/json' },
+    { text: 'تذكرة طوارئ رقم E-104. يرجى التوجه إلى المنطقة ألف.', lang: 'ar' }
+  );
+  assert.strictEqual(ttsRes.status, 200);
+  console.log('[PASS] POST /api/tts Arabic neural voice endpoint verified');
+
+  assert.ok(html.includes('id="view-guide"'), 'Interactive Guide & Tutorial tab must be present in HTML');
+  assert.ok(html.includes('id="tour-bar"'), 'Floating 4-step tour banner must be present in HTML');
+  console.log('[PASS] Guide & Tutorial tab and 4-Step Live Tour verified');
+
   // Restore clean seed state after test
   await invokeServer('POST', '/api/reset');
   await invokeServer('POST', '/api/seed');

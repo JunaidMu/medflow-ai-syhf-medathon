@@ -272,6 +272,98 @@ async function callOpenAIStructure(apiKey, payload) {
   }
 }
 
+async function translateTranscriptIfNeeded(apiKey, rawText, targetLang) {
+  const cleaned = MedFlow.text(rawText, 3000);
+  if (!cleaned || !apiKey) return cleaned;
+  const hasArabic = /[\u0600-\u06FF]/.test(cleaned);
+  const hasLatin = /[a-zA-Z]{3,}/.test(cleaned);
+
+  if (targetLang === 'ar' && hasLatin) {
+    try {
+      const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: LLM_MODEL,
+          temperature: 0.1,
+          messages: [
+            {
+              role: 'system',
+              content:
+                'Translate the patient\'s first-person emergency department complaint accurately into natural Saudi/Modern Standard Arabic (first-person, e.g., "أعاني من..."). Output ONLY the Arabic translation, nothing else.'
+            },
+            { role: 'user', content: cleaned }
+          ]
+        })
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        const out = MedFlow.text(data.choices?.[0]?.message?.content || '', 3000);
+        if (out) return out;
+      }
+    } catch (_) {}
+  } else if (targetLang === 'en' && hasArabic && !hasLatin) {
+    try {
+      const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: LLM_MODEL,
+          temperature: 0.1,
+          messages: [
+            {
+              role: 'system',
+              content:
+                'Translate the patient\'s first-person emergency department complaint accurately into natural English (first-person, e.g., "I have..."). Output ONLY the English translation, nothing else.'
+            },
+            { role: 'user', content: cleaned }
+          ]
+        })
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        const out = MedFlow.text(data.choices?.[0]?.message?.content || '', 3000);
+        if (out) return out;
+      }
+    } catch (_) {}
+  }
+  return cleaned;
+}
+
+async function callOpenAITTS(apiKey, speechText, lang = 'ar') {
+  const input = MedFlow.text(speechText, 1000);
+  if (!input || !apiKey) return { ok: false, error: 'Missing text or API key' };
+  try {
+    const resp = await fetch('https://api.openai.com/v1/audio/speech', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'tts-1',
+        voice: lang === 'ar' ? 'onyx' : 'nova',
+        input,
+        response_format: 'mp3'
+      })
+    });
+    if (!resp.ok) {
+      const errText = await resp.text();
+      return { ok: false, error: `OpenAI TTS HTTP ${resp.status}: ${errText.slice(0, 180)}` };
+    }
+    const arrayBuf = await resp.arrayBuffer();
+    return { ok: true, buffer: Buffer.from(arrayBuf) };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
 async function callOpenAITranscribe(apiKey, audioBuffer, contentType, langHint) {
   const ext = contentType.includes('mp4')
     ? 'mp4'
@@ -296,9 +388,6 @@ async function callOpenAITranscribe(apiKey, audioBuffer, contentType, langHint) 
         'prompt',
         'تسجيل استقبال طوارئ طبي في السعودية. أعاني من ألم في الصدر، ضيق في التنفس، حمى، صداع، دوخة، سكري، ضغط، حساسية بنسلين. Emergency department intake in Jeddah Saudi Arabia.'
       );
-      if (langHint === 'ar' || langHint === 'en') {
-        form.append('language', langHint);
-      }
 
       const resp = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
@@ -498,12 +587,13 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
-      const structured = await callOpenAIStructure(apiKey, { complaint: sttResult.text });
+      const finalText = await translateTranscriptIfNeeded(apiKey, sttResult.text, langHint);
+      const structured = await callOpenAIStructure(apiKey, { complaint: finalText });
       addAudit(
         'voice.transcribed',
         'Patient Kiosk',
         null,
-        `Transcribed via OpenAI (${sttResult.model}); length: ${sttResult.text.length} chars`
+        `Transcribed via OpenAI (${sttResult.model}); targetLang: ${langHint || 'auto'}; length: ${finalText.length} chars`
       );
       broadcastState('audit');
 
@@ -511,9 +601,35 @@ const server = http.createServer(async (req, res) => {
         ok: true,
         mode: 'openai',
         model: sttResult.model,
-        text: sttResult.text,
+        text: finalText,
+        originalText: sttResult.text,
         structured
       });
+    }
+
+    // 5b. OpenAI Neural Text-to-Speech (TTS) endpoint for Arabic & English voice instructions
+    if (req.method === 'POST' && pathname === '/api/tts') {
+      const apiKey = resolveApiKey(req);
+      const body = await readJson(req);
+      const speechText = MedFlow.text(body.text, 1000);
+      const lang = body.lang === 'en' ? 'en' : 'ar';
+      if (!speechText) {
+        return sendJson(res, 400, { ok: false, error: 'Missing text for TTS' });
+      }
+      if (!apiKey) {
+        return sendJson(res, 200, { ok: false, mode: 'no-api-key' });
+      }
+      const tts = await callOpenAITTS(apiKey, speechText, lang);
+      if (!tts.ok || !tts.buffer) {
+        return sendJson(res, 200, { ok: false, mode: 'tts-error', error: tts.error });
+      }
+      res.writeHead(200, {
+        'Content-Type': 'audio/mpeg',
+        'Content-Length': tts.buffer.length,
+        'Cache-Control': 'no-store'
+      });
+      res.end(tts.buffer);
+      return;
     }
 
     // 6. AI Clinical Intake Structuring & Bilingual SOAP Handover endpoint
