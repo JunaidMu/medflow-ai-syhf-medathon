@@ -418,12 +418,6 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
                 <p id="ai-preview-en" class="helper" style="color:#e2e8f0;margin-top:6px" dir="ltr"></p>
                 <p id="ai-preview-ar" class="helper" style="color:#cbd5e1;margin-top:4px" dir="rtl"></p>
                 <div id="ai-preview-chips" class="chip-row"></div>
-
-                <!-- FEATURE 1: AI FOLLOW-UP CLARIFIER CHIPS -->
-                <div id="ai-followup-box" class="followup-box" hidden>
-                  <small class="muted" style="display:block;margin-bottom:6px" data-en="💡 Missing details detected in triage intake — Tap to add without typing:" data-ar="💡 تفاصيل سريرية ناقصة — اضغط للإجابة السريعة دون كتابة:">💡 Missing details detected in triage intake — Tap to add without typing:</small>
-                  <div id="ai-followup-row" class="chip-row"></div>
-                </div>
               </div>
             </div>
 
@@ -729,9 +723,9 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
         <div class="guide-step">
           <span class="step">03</span>
           <div>
-            <h3 data-en="Tap AI Follow-Up Clarifiers & Confirm Accuracy" data-ar="أجب عن الأسئلة التوضيحية الذكية وأكّد النص">Tap AI Follow-Up Clarifiers & Confirm Accuracy</h3>
-            <p data-en="The AI automatically fills your Allergies & Medications boxes and suggests 2–3 purple clarifier chips (e.g., '+ Started < 1 hour ago?'). Tap any chip to add it, then check the confirmation box." data-ar="يملأ الذكاء الاصطناعي حقول الحساسية والأدوية تلقائياً ويقترح ٢–٣ أسئلة توضيحية. اضغط على أي شريحة لإضافتها ثم ضع علامة التأكيد.">The AI automatically fills your Allergies & Medications boxes and suggests 2–3 purple clarifier chips (e.g., '+ Started < 1 hour ago?'). Tap any chip to add it, then check the confirmation box.</p>
-            <button type="button" class="btn compact purple" data-guide-action="kiosk-clarify" data-en="See AI Clarifier Chips →" data-ar="شاهد الشرائح التوضيحية ←">See AI Clarifier Chips →</button>
+            <h3 data-en="Review AI Clinical Summary & Auto-Extracted Details" data-ar="مراجعة الملخص السريري الذكي والبيانات المستخلصة">Review AI Clinical Summary & Auto-Extracted Details</h3>
+            <p data-en="The AI automatically structures your complaint into Arabic and English, auto-fills your Allergies & Medications fields, and extracts key clinical HPI chips. Check the confirmation box." data-ar="يملأ الذكاء الاصطناعي حقول الحساسية والأدوية تلقائياً ويستخلص ملخصاً سريرياً باللغتين العربية والإنجليزية. راجع النص ثم ضع علامة التأكيد.">The AI automatically structures your complaint into Arabic and English, auto-fills your Allergies & Medications fields, and extracts key clinical HPI chips. Check the confirmation box.</p>
+            <button type="button" class="btn compact purple" data-guide-action="kiosk-clarify" data-en="See AI Structuring →" data-ar="شاهد الهيكلة الذكية ←">See AI Structuring →</button>
           </div>
         </div>
 
@@ -1789,8 +1783,8 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
         zoneAr: 'المنطقة أ · مسار الفرز الفوري والإنعاش (غرفة ١)',
         waitEn: '0 min · Immediate Nurse Escort',
         waitAr: '٠ دقيقة · مرافقة فورية لطاقم الطوارئ',
-        speechEn: `Emergency Ticket E ${num}. Immediate clinical triage required. Please proceed directly to Zone A, Resuscitation and Immediate Triage, or alert medical staff now.`,
-        speechAr: `تذكرة طوارئ، الرمز إي ${num}. الحالة حرجة وتتطلب تدخلاً عاجلاً. يرجى التوجه فوراً إلى المنطقة أ، مسار الفرز الفوري والإنعاش، أو إبلاغ الطاقم الطبي الآن.`
+        speechEn: 'Emergency case. Please proceed immediately to Resuscitation, Zone A.',
+        speechAr: 'حالة طارئة حرجة. يرجى التوجه فوراً إلى قسم الإنعاش، المنطقة (أ).'
       };
     }
     if (level === 'priority' || level === 'unclassified') {
@@ -1805,8 +1799,8 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
         zoneAr: 'المنطقة ب · مسار التقييم العاجل ذو الأولوية',
         waitEn: `Queue #${sameTierPending + 1} · Est. ~${estMins} mins`,
         waitAr: `الترتيب #${sameTierPending + 1} · الانتظار التقريبي ~${estMins} دقيقة`,
-        speechEn: `Priority Ticket P ${num}. Please proceed to Zone B, Acute Priority Assessment waiting area. Your estimated wait time is approximately ${estMins} minutes.`,
-        speechAr: `تذكرة أولوية، الرمز بي ${num}. يرجى التوجه إلى استراحة المنطقة ب، مسار التقييم العاجل. وقت الانتظار التقريبي ${estMins} دقيقة.`
+        speechEn: `Priority case. Please proceed to the waiting area in Zone B. Estimated wait time is ${estMins} minutes.`,
+        speechAr: `حالة مستعجلة. يرجى الانتظار في المنطقة (ب) للتقييم الطبي. وقت الانتظار التقريبي ${estMins} دقيقة.`
       };
     }
     const num = String(300 + (numSeed % 89));
@@ -1820,8 +1814,8 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
       zoneAr: 'المنطقة ج · عيادة المسار السريع للحالات الاعتيادية',
       waitEn: `Queue #${sameTierPending + 1} · Est. ~${estMins} mins`,
       waitAr: `الترتيب #${sameTierPending + 1} · الانتظار التقريبي ~${estMins} دقيقة`,
-      speechEn: `Fast Track Ticket S ${num}. Stable condition. Please proceed to Zone C, Fast-Track Clinic lounge. Your estimated wait time is approximately ${estMins} minutes.`,
-      speechAr: `تذكرة المسار السريع، الرمز إس ${num}. حالتك مستقرة. يرجى التوجه إلى عيادة المسار السريع في المنطقة ج. وقت الانتظار التقريبي ${estMins} دقيقة.`
+      speechEn: `Standard case. Please proceed to the Fast-Track clinic in Zone C. Estimated wait time is ${estMins} minutes.`,
+      speechAr: `حالة اعتيادية ومستقرة. يرجى التوجه إلى عيادة المسار السريع في المنطقة (ج). وقت الانتظار التقريبي ${estMins} دقيقة.`
     };
   }
 
@@ -2586,37 +2580,6 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
       pos.forEach((item) => chips.append($node('span', 'chip pos', '+ ' + item)));
       const neg = (state.lang === 'ar' ? st.hpi?.negatives_ar : st.hpi?.negatives_en) || [];
       neg.forEach((item) => chips.append($node('span', 'chip neg', '− ' + item)));
-
-      // Feature 1: Render AI Smart Follow-Up Clarifier Chips
-      const fBox = $('ai-followup-box');
-      const fRow = $('ai-followup-row');
-      fRow.replaceChildren();
-      const followups = Array.isArray(st.followups) ? st.followups : [];
-      if (followups.length) {
-        fBox.hidden = false;
-        followups.forEach((f) => {
-          const label = state.lang === 'ar' ? f.label_ar : f.label_en;
-          const fb = $node('button', 'followup-btn', label);
-          fb.type = 'button';
-          fb.addEventListener('click', async () => {
-            const cur = $('field-complaint').value.trim();
-            const useAr = /[\u0600-\u06FF]/.test(cur) || state.lang === 'ar';
-            const phrase = useAr ? f.append_ar : f.append_en;
-            if (!cur.includes(phrase)) {
-              $('field-complaint').value = (cur ? cur + (useAr ? ' ' : ' ') : '') + phrase;
-            }
-            fb.classList.add('applied');
-            fb.textContent = '✓ ' + label;
-            $('confirm-transcript').checked = false;
-            await runAIStructuring(true);
-            updateRedFlag();
-            toast('Clarification added to your complaint!', 'تمت إضافة التوضيح إلى نص الشكوى!');
-          });
-          fRow.append(fb);
-        });
-      } else {
-        fBox.hidden = true;
-      }
 
       // Auto-populate optional health details if blank or append if new
       let autoFilled = false;
@@ -3781,10 +3744,10 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
         transcribed_openai: [
           'Transcribed via OpenAI (' +
             (extra || 'Whisper') +
-            '). Tap any follow-up clarifiers below or confirm your text.',
+            '). Review and confirm your text below.',
           'تم التفريغ الصوتي عبر OpenAI (' +
             (extra || 'Whisper') +
-            '). يمكنك الضغط على الأسئلة التوضيحية أدناه أو تأكيد النص.'
+            '). راجع النص وحدد مربع التأكيد أدناه.'
         ],
         transcribed_browser: [
           'Transcribed via Live Browser Speech Recognition. Add an OpenAI API key in AI Settings for Whisper accuracy.',
@@ -4173,17 +4136,15 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
         }
       },
       {
-        badgeEn: 'Step 2 of 4 · AI Structuring & Follow-Up Clarifiers',
-        badgeAr: 'الخطوة ٢ من ٤ · الهيكلة الذكية والأسئلة التوضيحية',
-        titleEn: 'Auto-Extracted Allergies, Meds & Smart Clarifier Chips',
-        titleAr: 'استخلاص الحساسية والأدوية والأسئلة التوضيحية الذكية',
-        descEn: 'OpenAI extracts English & Arabic summaries, auto-fills Allergies/Meds, and shows purple follow-up chips to complete missing details.',
-        descAr: 'يستخلص الذكاء الاصطناعي الملخص ثنائي اللغة والحساسية والأدوية، ويعرض شرائح أسئلة توضيحية لإكمال التفاصيل.',
+        badgeEn: 'Step 2 of 4 · AI Structuring & Clinical Extraction',
+        badgeAr: 'الخطوة ٢ من ٤ · الهيكلة الذكية والاستخلاص السريري',
+        titleEn: 'Auto-Extracted Allergies, Meds & Bilingual Handover',
+        titleAr: 'استخلاص الحساسية والأدوية والملخص ثنائي اللغة',
+        descEn: 'OpenAI extracts English & Arabic summaries and automatically populates Allergies, Medications, and HPI chips without manual typing.',
+        descAr: 'يستخلص الذكاء الاصطناعي الملخص ثنائي اللغة ويملأ حقول الحساسية والأدوية وتفاصيل الحالة تلقائياً.',
         run: async () => {
           showView('kiosk');
           if (!$('field-complaint').value) await loadScenario();
-          const firstChip = $('ai-followup-row')?.querySelector('button:not(.applied)');
-          if (firstChip) firstChip.click();
           $('ai-preview-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       },

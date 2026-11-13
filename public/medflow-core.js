@@ -809,8 +809,8 @@
         zoneAr: 'المنطقة أ · مسار الفرز الفوري والإنعاش (غرفة ١)',
         waitEn: '0 min · Immediate Nurse Escort',
         waitAr: '٠ دقيقة · مرافقة فورية لطاقم الطوارئ',
-        speechEn: `Emergency Ticket E ${num}. Immediate clinical triage required. Please proceed directly to Zone A, Resuscitation and Immediate Triage, or alert medical staff now.`,
-        speechAr: `تذكرة طوارئ، الرمز إي ${num}. الحالة حرجة وتتطلب تدخلاً عاجلاً. يرجى التوجه فوراً إلى المنطقة أ، مسار الفرز الفوري والإنعاش، أو إبلاغ الطاقم الطبي الآن.`
+        speechEn: 'Emergency case. Please proceed immediately to Resuscitation, Zone A.',
+        speechAr: 'حالة طارئة حرجة. يرجى التوجه فوراً إلى قسم الإنعاش، المنطقة (أ).'
       };
     }
     if (level === 'priority' || level === 'unclassified') {
@@ -825,8 +825,8 @@
         zoneAr: 'المنطقة ب · مسار التقييم العاجل ذو الأولوية',
         waitEn: `Queue #${sameTierPending + 1} · Est. ~${estMins} mins`,
         waitAr: `الترتيب #${sameTierPending + 1} · الانتظار التقريبي ~${estMins} دقيقة`,
-        speechEn: `Priority Ticket P ${num}. Please proceed to Zone B, Acute Priority Assessment waiting area. Your estimated wait time is approximately ${estMins} minutes.`,
-        speechAr: `تذكرة أولوية، الرمز بي ${num}. يرجى التوجه إلى استراحة المنطقة ب، مسار التقييم العاجل. وقت الانتظار التقريبي ${estMins} دقيقة.`
+        speechEn: `Priority case. Please proceed to the waiting area in Zone B. Estimated wait time is ${estMins} minutes.`,
+        speechAr: `حالة مستعجلة. يرجى الانتظار في المنطقة (ب) للتقييم الطبي. وقت الانتظار التقريبي ${estMins} دقيقة.`
       };
     }
     const num = String(300 + (numSeed % 89));
@@ -840,8 +840,8 @@
       zoneAr: 'المنطقة ج · عيادة المسار السريع للحالات الاعتيادية',
       waitEn: `Queue #${sameTierPending + 1} · Est. ~${estMins} mins`,
       waitAr: `الترتيب #${sameTierPending + 1} · الانتظار التقريبي ~${estMins} دقيقة`,
-      speechEn: `Fast Track Ticket S ${num}. Stable condition. Please proceed to Zone C, Fast-Track Clinic lounge. Your estimated wait time is approximately ${estMins} minutes.`,
-      speechAr: `تذكرة المسار السريع، الرمز إس ${num}. حالتك مستقرة. يرجى التوجه إلى عيادة المسار السريع في المنطقة ج. وقت الانتظار التقريبي ${estMins} دقيقة.`
+      speechEn: `Standard case. Please proceed to the Fast-Track clinic in Zone C. Estimated wait time is ${estMins} minutes.`,
+      speechAr: `حالة اعتيادية ومستقرة. يرجى التوجه إلى عيادة المسار السريع في المنطقة (ج). وقت الانتظار التقريبي ${estMins} دقيقة.`
     };
   }
 
