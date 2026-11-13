@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node test-mvp.js"
+    "test": "node test-mvp.js && node run-tests.cjs --check",
+    "test:app": "node test-mvp.js",
+    "test:scenarios": "node run-tests.cjs",
+    "test:scenarios:update": "node run-tests.cjs --update"
   },
   "engines": {
     "node": ">=20.0.0"

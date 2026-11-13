@@ -203,6 +203,37 @@
     return list.slice(0, 3);
   }
 
+  // ---- Shared clinical text helpers (normalization + negation scoping) ----
+  function clinicalText(s) {
+    return digits(text(s, 3000))
+      .toLowerCase()
+      .normalize('NFKC')
+      .replace(/[ًٌٍَُِّْـ]/g, '')
+      .replace(/[أإآ]/g, 'ا')
+      .replace(/ة/g, 'ه')
+      .replace(/[’`]/g, "'");
+  }
+
+  const SYM_EN =
+    "chest\\s+(?:pain|pressure|tightness)|pain\\s+in\\s+(?:my|the)\\s+chest|shortness of breath|difficulty breathing|trouble breathing|breathing difficulty|heavy bleeding|severe bleeding|bleeding|loss of consciousness|stroke symptoms";
+  const SYM_AR =
+    '(?:الم|وجع|ضغط)\\s+(?:في\\s+)?(?:ال)?صدر\\S*|ضيق\\s+(?:في\\s+)?(?:ال)?تنفس|صعوبه\\s+(?:في\\s+)?(?:ال)?تنفس|كتمه|نزيف(?:\\s+شديد)?|فقدان\\s+(?:ال)?وعي';
+  const NEG_EN_RE = new RegExp(
+    `\\b(?:no|denies|deny|denied|without|not having|don't have|do not have|never had)\\s+(?:any\\s+)?(?:${SYM_EN})(?:\\s*(?:,|or|nor|and)\\s*(?:any\\s+)?(?:${SYM_EN}))*`,
+    'gi'
+  );
+  const NEG_AR_RE = new RegExp(
+    `(?:لا اعاني من|ما اعاني من|لا يوجد|لا توجد|ما في|مافي|ما فيه|ما عندي|ماعندي|ليس لدي|ليس عندي|بدون|لا)(?:\\s+(?:عندي|لدي|اي))?\\s+(?:${SYM_AR})(?:\\s*(?:ولا|او|و)\\s*(?:${SYM_AR}))*`,
+    'g'
+  );
+  function stripNegations(norm) {
+    return norm.replace(NEG_EN_RE, ' ').replace(NEG_AR_RE, ' ');
+  }
+  const CHEST_RE =
+    /chest\s*(?:pain|pressure|tightness)|pain\s+in\s+(?:my|the)\s+chest|chest\s+hurts|الم.{0,16}صدر|ضغط.{0,16}صدر|وجع.{0,16}صدر|وجع\s+(?:في\s+)?قلب|الم\s+(?:في\s+)?(?:ال)?قلب|صدري\s+يوجعني/i;
+  const SOB_RE =
+    /shortness of breath|difficulty breathing|trouble breathing|hard to breathe|struggling to breathe|breathless|cannot breathe|can't breathe|ضيق.{0,12}تنفس|صعوبه.{0,12}تنفس|كتمه|ما اقدر اتنفس|مو قادر اتنفس/i;
+
   function localStructure(complaintRaw, existing = {}) {
     const raw = text(complaintRaw, 3000);
     if (!raw) return null;
@@ -210,7 +241,8 @@
       .toLowerCase()
       .normalize('NFKC')
       .replace(/[ًٌٍَُِّْـ]/g, '')
-      .replace(/[أإآ]/g, 'ا');
+      .replace(/[أإآ]/g, 'ا')
+      .replace(/ة/g, 'ه');
 
     const isArabic = /[\u0600-\u06FF]/.test(raw);
     const positivesEn = [];
@@ -220,10 +252,12 @@
 
     const negChest =
       /\b(?:no|denies|without)\s+(?:chest\s+(?:pain|pressure))\b/i.test(norm) ||
-      /(?:لا اعاني من|لا يوجد|بدون)\s+(?:الم في الصدر|وجع في الصدر)/.test(norm);
+      /(?:لا اعاني من|لا يوجد|بدون)\s+(?:الم في الصدر|وجع في الصدر)/.test(norm) ||
+      (CHEST_RE.test(clinicalText(raw)) && !CHEST_RE.test(stripNegations(clinicalText(raw))));
     const negSob =
       /\b(?:no|denies|without)\s+(?:shortness of breath|difficulty breathing)\b/i.test(norm) ||
-      /(?:لا اعاني من|لا يوجد|بدون)\s+(?:ضيق في التنفس|صعوبه في التنفس|كتمه)/.test(norm);
+      /(?:لا اعاني من|لا يوجد|بدون)\s+(?:ضيق في التنفس|صعوبه في التنفس|كتمه)/.test(norm) ||
+      (SOB_RE.test(clinicalText(raw)) && !SOB_RE.test(stripNegations(clinicalText(raw))));
     const negBleed =
       /\b(?:no|denies|without)\s+(?:bleeding|head injury|loss of consciousness)\b/i.test(norm) ||
       /(?:لا يوجد|بدون)\s+(?:نزيف|فقدان وعي)/.test(norm);
@@ -241,19 +275,12 @@
       negativesAr.push('ينفي النزيف أو فقدان الوعي');
     }
 
-    const hasChest =
-      !negChest &&
-      (/chest\s*(?:pain|pressure|tightness)/i.test(norm) ||
-        /الم.{0,16}صدر|ضغط.{0,16}صدر|وجع.{0,16}صدر/.test(norm));
+    const hasChest = !negChest && CHEST_RE.test(norm);
     if (hasChest) {
       positivesEn.push('Chest pain / pressure');
       positivesAr.push('ألم / ضغط في الصدر');
     }
-    if (
-      !negSob &&
-      (/shortness of breath|difficulty breathing|wheez|dyspnea|can't breathe/i.test(norm) ||
-        /ضيق.{0,12}تنفس|صعوبه.{0,12}تنفس|كتمه|صفير/.test(norm))
-    ) {
+    if (!negSob && (SOB_RE.test(norm) || /wheez|dyspnea|صفير/i.test(norm))) {
       positivesEn.push('Shortness of breath / dyspnea');
       positivesAr.push('ضيق في التنفس / كتمة');
     }
@@ -316,6 +343,9 @@
     if (!extractedAllergies) {
       if (/penicillin|بنسلين/.test(norm)) extractedAllergies = 'Penicillin (بنسلين)';
       else if (/sulfa|سلفا/.test(norm)) extractedAllergies = 'Sulfa (سلفا)';
+      else if (/peanut|فول سوداني/.test(norm)) extractedAllergies = 'Peanuts (فول سوداني)';
+      else if (/latex|لاتكس/.test(norm)) extractedAllergies = 'Latex (لاتكس)';
+      else if (/aspirin|اسبرين/.test(norm) && /حساسي|allerg/.test(norm)) extractedAllergies = 'Aspirin (أسبرين)';
       else if (/لا توجد حساسيه|بدون حساسيه|no known drug allerg|no allerg/i.test(norm))
         extractedAllergies = 'No known allergies (لا توجد حساسية معروفة)';
     }
@@ -586,7 +616,7 @@
 
   function clinicalInsights(p) {
     // Preliminary ICD-10-AM Symptom Codes (Saudi NPHIES standard) & Drug/Allergy Safety Alerts
-    const raw = text(p.complaint).toLowerCase().normalize('NFKC').replace(/[ًٌٍَُِّْـ]/g, '').replace(/[أإآ]/g, 'ا');
+    const raw = stripNegations(clinicalText(p.complaint));
     const negChest =
       /\b(?:no|denies|without)\s+(?:chest\s+(?:pain|pressure))\b/i.test(raw) ||
       /(?:لا اعاني من|لا يوجد|بدون)\s+(?:الم في الصدر|وجع في الصدر)/.test(raw);
@@ -715,26 +745,14 @@
   }
 
   function flag(p) {
-    let s = text(p.complaint)
-      .toLowerCase()
-      .normalize('NFKC')
-      .replace(/[ًٌٍَُِّْـ]/g, '')
-      .replace(/[أإآ]/g, 'ا');
+    let s = clinicalText(p.complaint);
     const terms = [
-      /chest\s+(?:pain|pressure|tightness)/i,
-      /shortness of breath|difficulty breathing|cannot breathe|can't breathe|severe wheez/i,
+      /chest\s+(?:pain|pressure|tightness)|pain\s+in\s+(?:my|the)\s+chest|chest\s+hurts/i,
+      /shortness of breath|difficulty breathing|trouble breathing|hard to breathe|struggling to breathe|cannot breathe|can't breathe|severe wheez/i,
       /heavy bleeding|severe bleeding|unconscious|passed out|stroke|facial droop|slurred speech/i,
-      /الم.{0,16}صدر|ضغط.{0,16}صدر|وجع.{0,16}صدر|ضيق.{0,12}تنفس|صعوبه.{0,12}تنفس|كتمه شديده|نزيف شديد|فقدان الوعي|سكته|تدلي الوجه/
+      /الم.{0,16}صدر|ضغط.{0,16}صدر|وجع.{0,16}صدر|وجع\s+(?:في\s+)?قلب|الم\s+(?:في\s+)?(?:ال)?قلب|صدري\s+يوجعني|ضيق.{0,12}تنفس|صعوبه.{0,12}تنفس|ما اقدر اتنفس|كتمه شديده|نزيف شديد|فقدان الوعي|سكته|تدلي الوجه/
     ];
-    s = s
-      .replace(
-        /\b(?:no|denies|without)\s+(?:chest\s+(?:pain|pressure)|shortness of breath|difficulty breathing|heavy bleeding|severe bleeding|stroke symptoms)(?:\s*(?:or|nor|,|and)\s*(?:chest\s+(?:pain|pressure)|shortness of breath|difficulty breathing|heavy bleeding|severe bleeding|loss of consciousness|stroke symptoms))*/gi,
-        ''
-      )
-      .replace(
-        /(?:لا اعاني من|لا يوجد|بدون)\s+(?:الم في الصدر|ضيق في التنفس|نزيف شديد|نزيف|فقدان وعي)(?:\s*(?:او|ولا|و)\s*(?:الم في الصدر|ضيق في التنفس|نزيف شديد|نزيف|فقدان وعي))*/g,
-        ''
-      );
+    s = stripNegations(s);
     const red = terms.some((r) => r.test(s));
     const v = { ...(p.vitals || {}), ...(p.measuredVitals || {}) };
     const n2 = news2(p);
@@ -781,7 +799,8 @@
     ).length;
 
     if (level === 'immediate') {
-      const code = 'E-' + String(100 + (numSeed % 89));
+      const num = String(100 + (numSeed % 89));
+      const code = 'E-' + num;
       return {
         code,
         level,
@@ -790,12 +809,13 @@
         zoneAr: 'المنطقة أ · مسار الفرز الفوري والإنعاش (غرفة ١)',
         waitEn: '0 min · Immediate Nurse Escort',
         waitAr: '٠ دقيقة · مرافقة فورية لطاقم الطوارئ',
-        speechEn: `Emergency Ticket ${code}. Immediate human triage required. Please proceed directly to Zone A, Resuscitation and Triage Bay 1, or alert staff immediately.`,
-        speechAr: `تذكرة طوارئ رقم ${code}. يلزم فرز بشري فوري. يرجى التوجه فوراً إلى المنطقة ألف، غرفة الفرز الفوري رقم واحد، أو إبلاغ الطاقم الطبي الآن.`
+        speechEn: `Emergency Ticket E ${num}. Immediate clinical triage required. Please proceed directly to Zone A, Resuscitation and Immediate Triage, or alert medical staff now.`,
+        speechAr: `تذكرة طوارئ، الرمز إي ${num}. الحالة حرجة وتتطلب تدخلاً عاجلاً. يرجى التوجه فوراً إلى المنطقة أ، مسار الفرز الفوري والإنعاش، أو إبلاغ الطاقم الطبي الآن.`
       };
     }
     if (level === 'priority' || level === 'unclassified') {
-      const code = 'P-' + String(200 + (numSeed % 89));
+      const num = String(200 + (numSeed % 89));
+      const code = 'P-' + num;
       const estMins = Math.max(6, (sameTierPending + 1) * 7);
       return {
         code,
@@ -805,11 +825,12 @@
         zoneAr: 'المنطقة ب · مسار التقييم العاجل ذو الأولوية',
         waitEn: `Queue #${sameTierPending + 1} · Est. ~${estMins} mins`,
         waitAr: `الترتيب #${sameTierPending + 1} · الانتظار التقريبي ~${estMins} دقيقة`,
-        speechEn: `Priority Ticket ${code}. Please proceed to Zone B, Acute Priority Assessment waiting area. Your estimated wait time is ${estMins} minutes.`,
-        speechAr: `تذكرة أولوية رقم ${code}. يرجى التوجه إلى المنطقة باء، منطقة التقييم العاجل. وقت الانتظار التقريبي ${estMins} دقيقة.`
+        speechEn: `Priority Ticket P ${num}. Please proceed to Zone B, Acute Priority Assessment waiting area. Your estimated wait time is approximately ${estMins} minutes.`,
+        speechAr: `تذكرة أولوية، الرمز بي ${num}. يرجى التوجه إلى استراحة المنطقة ب، مسار التقييم العاجل. وقت الانتظار التقريبي ${estMins} دقيقة.`
       };
     }
-    const code = 'S-' + String(300 + (numSeed % 89));
+    const num = String(300 + (numSeed % 89));
+    const code = 'S-' + num;
     const estMins = Math.max(12, (sameTierPending + 1) * 11);
     return {
       code,
@@ -819,8 +840,8 @@
       zoneAr: 'المنطقة ج · عيادة المسار السريع للحالات الاعتيادية',
       waitEn: `Queue #${sameTierPending + 1} · Est. ~${estMins} mins`,
       waitAr: `الترتيب #${sameTierPending + 1} · الانتظار التقريبي ~${estMins} دقيقة`,
-      speechEn: `Standard Fast-Track Ticket ${code}. Please proceed to Zone C, Fast-Track Clinic lounge. Your estimated wait time is ${estMins} minutes.`,
-      speechAr: `تذكرة المسار السريع رقم ${code}. يرجى التوجه إلى المنطقة جيم، استراحة المسار السريع. وقت الانتظار التقريبي ${estMins} دقيقة.`
+      speechEn: `Fast Track Ticket S ${num}. Stable condition. Please proceed to Zone C, Fast-Track Clinic lounge. Your estimated wait time is approximately ${estMins} minutes.`,
+      speechAr: `تذكرة المسار السريع، الرمز إس ${num}. حالتك مستقرة. يرجى التوجه إلى عيادة المسار السريع في المنطقة ج. وقت الانتظار التقريبي ${estMins} دقيقة.`
     };
   }
 

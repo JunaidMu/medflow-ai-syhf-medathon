@@ -421,7 +421,7 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
 
                 <!-- FEATURE 1: AI FOLLOW-UP CLARIFIER CHIPS -->
                 <div id="ai-followup-box" class="followup-box" hidden>
-                  <small class="muted" style="display:block;margin-bottom:6px" data-en="AI Smart Follow-Up Clarifiers (Tap to add missing detail):" data-ar="أسئلة توضيحية ذكية من الذكاء الاصطناعي (اضغط لإضافة التفصيل):">AI Smart Follow-Up Clarifiers (Tap to add missing detail):</small>
+                  <small class="muted" style="display:block;margin-bottom:6px" data-en="💡 Missing details detected in triage intake — Tap to add without typing:" data-ar="💡 تفاصيل سريرية ناقصة — اضغط للإجابة السريعة دون كتابة:">💡 Missing details detected in triage intake — Tap to add without typing:</small>
                   <div id="ai-followup-row" class="chip-row"></div>
                 </div>
               </div>
@@ -898,6 +898,8 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
 <footer>
   <span>© 2026 MedFlow AI · SYHF MEDATHON JEDDAH MVP</span>
   <div class="row">
+    <a href="testing.html" target="_blank" rel="noopener" style="color:#5eead4;font-weight:600;text-decoration:none" data-en="🧪 Testing & Validation (30 scenarios)" data-ar="🧪 الاختبار والتحقق (٣٠ سيناريو)">🧪 Testing & Validation (30 scenarios)</a>
+    <span>·</span>
     <span data-en="PDPL-Aware Prototype Design" data-ar="تصميم يراعي حماية البيانات الشخصية">PDPL-Aware Prototype Design</span>
     <span>·</span>
     <span data-en="FHIR R4 Demo Interoperability" data-ar="تكامل FHIR R4 تجريبي">FHIR R4 Demo Interoperability</span>
@@ -1181,6 +1183,37 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
     return list.slice(0, 3);
   }
 
+  // ---- Shared clinical text helpers (normalization + negation scoping) ----
+  function clinicalText(s) {
+    return digits(text(s, 3000))
+      .toLowerCase()
+      .normalize('NFKC')
+      .replace(/[ًٌٍَُِّْـ]/g, '')
+      .replace(/[أإآ]/g, 'ا')
+      .replace(/ة/g, 'ه')
+      .replace(/[’`]/g, "'");
+  }
+
+  const SYM_EN =
+    "chest\\s+(?:pain|pressure|tightness)|pain\\s+in\\s+(?:my|the)\\s+chest|shortness of breath|difficulty breathing|trouble breathing|breathing difficulty|heavy bleeding|severe bleeding|bleeding|loss of consciousness|stroke symptoms";
+  const SYM_AR =
+    '(?:الم|وجع|ضغط)\\s+(?:في\\s+)?(?:ال)?صدر\\S*|ضيق\\s+(?:في\\s+)?(?:ال)?تنفس|صعوبه\\s+(?:في\\s+)?(?:ال)?تنفس|كتمه|نزيف(?:\\s+شديد)?|فقدان\\s+(?:ال)?وعي';
+  const NEG_EN_RE = new RegExp(
+    `\\b(?:no|denies|deny|denied|without|not having|don't have|do not have|never had)\\s+(?:any\\s+)?(?:${SYM_EN})(?:\\s*(?:,|or|nor|and)\\s*(?:any\\s+)?(?:${SYM_EN}))*`,
+    'gi'
+  );
+  const NEG_AR_RE = new RegExp(
+    `(?:لا اعاني من|ما اعاني من|لا يوجد|لا توجد|ما في|مافي|ما فيه|ما عندي|ماعندي|ليس لدي|ليس عندي|بدون|لا)(?:\\s+(?:عندي|لدي|اي))?\\s+(?:${SYM_AR})(?:\\s*(?:ولا|او|و)\\s*(?:${SYM_AR}))*`,
+    'g'
+  );
+  function stripNegations(norm) {
+    return norm.replace(NEG_EN_RE, ' ').replace(NEG_AR_RE, ' ');
+  }
+  const CHEST_RE =
+    /chest\s*(?:pain|pressure|tightness)|pain\s+in\s+(?:my|the)\s+chest|chest\s+hurts|الم.{0,16}صدر|ضغط.{0,16}صدر|وجع.{0,16}صدر|وجع\s+(?:في\s+)?قلب|الم\s+(?:في\s+)?(?:ال)?قلب|صدري\s+يوجعني/i;
+  const SOB_RE =
+    /shortness of breath|difficulty breathing|trouble breathing|hard to breathe|struggling to breathe|breathless|cannot breathe|can't breathe|ضيق.{0,12}تنفس|صعوبه.{0,12}تنفس|كتمه|ما اقدر اتنفس|مو قادر اتنفس/i;
+
   function localStructure(complaintRaw, existing = {}) {
     const raw = text(complaintRaw, 3000);
     if (!raw) return null;
@@ -1188,7 +1221,8 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
       .toLowerCase()
       .normalize('NFKC')
       .replace(/[ًٌٍَُِّْـ]/g, '')
-      .replace(/[أإآ]/g, 'ا');
+      .replace(/[أإآ]/g, 'ا')
+      .replace(/ة/g, 'ه');
 
     const isArabic = /[\u0600-\u06FF]/.test(raw);
     const positivesEn = [];
@@ -1198,10 +1232,12 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
 
     const negChest =
       /\b(?:no|denies|without)\s+(?:chest\s+(?:pain|pressure))\b/i.test(norm) ||
-      /(?:لا اعاني من|لا يوجد|بدون)\s+(?:الم في الصدر|وجع في الصدر)/.test(norm);
+      /(?:لا اعاني من|لا يوجد|بدون)\s+(?:الم في الصدر|وجع في الصدر)/.test(norm) ||
+      (CHEST_RE.test(clinicalText(raw)) && !CHEST_RE.test(stripNegations(clinicalText(raw))));
     const negSob =
       /\b(?:no|denies|without)\s+(?:shortness of breath|difficulty breathing)\b/i.test(norm) ||
-      /(?:لا اعاني من|لا يوجد|بدون)\s+(?:ضيق في التنفس|صعوبه في التنفس|كتمه)/.test(norm);
+      /(?:لا اعاني من|لا يوجد|بدون)\s+(?:ضيق في التنفس|صعوبه في التنفس|كتمه)/.test(norm) ||
+      (SOB_RE.test(clinicalText(raw)) && !SOB_RE.test(stripNegations(clinicalText(raw))));
     const negBleed =
       /\b(?:no|denies|without)\s+(?:bleeding|head injury|loss of consciousness)\b/i.test(norm) ||
       /(?:لا يوجد|بدون)\s+(?:نزيف|فقدان وعي)/.test(norm);
@@ -1219,19 +1255,12 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
       negativesAr.push('ينفي النزيف أو فقدان الوعي');
     }
 
-    const hasChest =
-      !negChest &&
-      (/chest\s*(?:pain|pressure|tightness)/i.test(norm) ||
-        /الم.{0,16}صدر|ضغط.{0,16}صدر|وجع.{0,16}صدر/.test(norm));
+    const hasChest = !negChest && CHEST_RE.test(norm);
     if (hasChest) {
       positivesEn.push('Chest pain / pressure');
       positivesAr.push('ألم / ضغط في الصدر');
     }
-    if (
-      !negSob &&
-      (/shortness of breath|difficulty breathing|wheez|dyspnea|can't breathe/i.test(norm) ||
-        /ضيق.{0,12}تنفس|صعوبه.{0,12}تنفس|كتمه|صفير/.test(norm))
-    ) {
+    if (!negSob && (SOB_RE.test(norm) || /wheez|dyspnea|صفير/i.test(norm))) {
       positivesEn.push('Shortness of breath / dyspnea');
       positivesAr.push('ضيق في التنفس / كتمة');
     }
@@ -1294,6 +1323,9 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
     if (!extractedAllergies) {
       if (/penicillin|بنسلين/.test(norm)) extractedAllergies = 'Penicillin (بنسلين)';
       else if (/sulfa|سلفا/.test(norm)) extractedAllergies = 'Sulfa (سلفا)';
+      else if (/peanut|فول سوداني/.test(norm)) extractedAllergies = 'Peanuts (فول سوداني)';
+      else if (/latex|لاتكس/.test(norm)) extractedAllergies = 'Latex (لاتكس)';
+      else if (/aspirin|اسبرين/.test(norm) && /حساسي|allerg/.test(norm)) extractedAllergies = 'Aspirin (أسبرين)';
       else if (/لا توجد حساسيه|بدون حساسيه|no known drug allerg|no allerg/i.test(norm))
         extractedAllergies = 'No known allergies (لا توجد حساسية معروفة)';
     }
@@ -1564,7 +1596,7 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
 
   function clinicalInsights(p) {
     // Preliminary ICD-10-AM Symptom Codes (Saudi NPHIES standard) & Drug/Allergy Safety Alerts
-    const raw = text(p.complaint).toLowerCase().normalize('NFKC').replace(/[ًٌٍَُِّْـ]/g, '').replace(/[أإآ]/g, 'ا');
+    const raw = stripNegations(clinicalText(p.complaint));
     const negChest =
       /\b(?:no|denies|without)\s+(?:chest\s+(?:pain|pressure))\b/i.test(raw) ||
       /(?:لا اعاني من|لا يوجد|بدون)\s+(?:الم في الصدر|وجع في الصدر)/.test(raw);
@@ -1693,26 +1725,14 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
   }
 
   function flag(p) {
-    let s = text(p.complaint)
-      .toLowerCase()
-      .normalize('NFKC')
-      .replace(/[ًٌٍَُِّْـ]/g, '')
-      .replace(/[أإآ]/g, 'ا');
+    let s = clinicalText(p.complaint);
     const terms = [
-      /chest\s+(?:pain|pressure|tightness)/i,
-      /shortness of breath|difficulty breathing|cannot breathe|can't breathe|severe wheez/i,
+      /chest\s+(?:pain|pressure|tightness)|pain\s+in\s+(?:my|the)\s+chest|chest\s+hurts/i,
+      /shortness of breath|difficulty breathing|trouble breathing|hard to breathe|struggling to breathe|cannot breathe|can't breathe|severe wheez/i,
       /heavy bleeding|severe bleeding|unconscious|passed out|stroke|facial droop|slurred speech/i,
-      /الم.{0,16}صدر|ضغط.{0,16}صدر|وجع.{0,16}صدر|ضيق.{0,12}تنفس|صعوبه.{0,12}تنفس|كتمه شديده|نزيف شديد|فقدان الوعي|سكته|تدلي الوجه/
+      /الم.{0,16}صدر|ضغط.{0,16}صدر|وجع.{0,16}صدر|وجع\s+(?:في\s+)?قلب|الم\s+(?:في\s+)?(?:ال)?قلب|صدري\s+يوجعني|ضيق.{0,12}تنفس|صعوبه.{0,12}تنفس|ما اقدر اتنفس|كتمه شديده|نزيف شديد|فقدان الوعي|سكته|تدلي الوجه/
     ];
-    s = s
-      .replace(
-        /\b(?:no|denies|without)\s+(?:chest\s+(?:pain|pressure)|shortness of breath|difficulty breathing|heavy bleeding|severe bleeding|stroke symptoms)(?:\s*(?:or|nor|,|and)\s*(?:chest\s+(?:pain|pressure)|shortness of breath|difficulty breathing|heavy bleeding|severe bleeding|loss of consciousness|stroke symptoms))*/gi,
-        ''
-      )
-      .replace(
-        /(?:لا اعاني من|لا يوجد|بدون)\s+(?:الم في الصدر|ضيق في التنفس|نزيف شديد|نزيف|فقدان وعي)(?:\s*(?:او|ولا|و)\s*(?:الم في الصدر|ضيق في التنفس|نزيف شديد|نزيف|فقدان وعي))*/g,
-        ''
-      );
+    s = stripNegations(s);
     const red = terms.some((r) => r.test(s));
     const v = { ...(p.vitals || {}), ...(p.measuredVitals || {}) };
     const n2 = news2(p);
@@ -1759,7 +1779,8 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
     ).length;
 
     if (level === 'immediate') {
-      const code = 'E-' + String(100 + (numSeed % 89));
+      const num = String(100 + (numSeed % 89));
+      const code = 'E-' + num;
       return {
         code,
         level,
@@ -1768,12 +1789,13 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
         zoneAr: 'المنطقة أ · مسار الفرز الفوري والإنعاش (غرفة ١)',
         waitEn: '0 min · Immediate Nurse Escort',
         waitAr: '٠ دقيقة · مرافقة فورية لطاقم الطوارئ',
-        speechEn: `Emergency Ticket ${code}. Immediate human triage required. Please proceed directly to Zone A, Resuscitation and Triage Bay 1, or alert staff immediately.`,
-        speechAr: `تذكرة طوارئ رقم ${code}. يلزم فرز بشري فوري. يرجى التوجه فوراً إلى المنطقة ألف، غرفة الفرز الفوري رقم واحد، أو إبلاغ الطاقم الطبي الآن.`
+        speechEn: `Emergency Ticket E ${num}. Immediate clinical triage required. Please proceed directly to Zone A, Resuscitation and Immediate Triage, or alert medical staff now.`,
+        speechAr: `تذكرة طوارئ، الرمز إي ${num}. الحالة حرجة وتتطلب تدخلاً عاجلاً. يرجى التوجه فوراً إلى المنطقة أ، مسار الفرز الفوري والإنعاش، أو إبلاغ الطاقم الطبي الآن.`
       };
     }
     if (level === 'priority' || level === 'unclassified') {
-      const code = 'P-' + String(200 + (numSeed % 89));
+      const num = String(200 + (numSeed % 89));
+      const code = 'P-' + num;
       const estMins = Math.max(6, (sameTierPending + 1) * 7);
       return {
         code,
@@ -1783,11 +1805,12 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
         zoneAr: 'المنطقة ب · مسار التقييم العاجل ذو الأولوية',
         waitEn: `Queue #${sameTierPending + 1} · Est. ~${estMins} mins`,
         waitAr: `الترتيب #${sameTierPending + 1} · الانتظار التقريبي ~${estMins} دقيقة`,
-        speechEn: `Priority Ticket ${code}. Please proceed to Zone B, Acute Priority Assessment waiting area. Your estimated wait time is ${estMins} minutes.`,
-        speechAr: `تذكرة أولوية رقم ${code}. يرجى التوجه إلى المنطقة باء، منطقة التقييم العاجل. وقت الانتظار التقريبي ${estMins} دقيقة.`
+        speechEn: `Priority Ticket P ${num}. Please proceed to Zone B, Acute Priority Assessment waiting area. Your estimated wait time is approximately ${estMins} minutes.`,
+        speechAr: `تذكرة أولوية، الرمز بي ${num}. يرجى التوجه إلى استراحة المنطقة ب، مسار التقييم العاجل. وقت الانتظار التقريبي ${estMins} دقيقة.`
       };
     }
-    const code = 'S-' + String(300 + (numSeed % 89));
+    const num = String(300 + (numSeed % 89));
+    const code = 'S-' + num;
     const estMins = Math.max(12, (sameTierPending + 1) * 11);
     return {
       code,
@@ -1797,8 +1820,8 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
       zoneAr: 'المنطقة ج · عيادة المسار السريع للحالات الاعتيادية',
       waitEn: `Queue #${sameTierPending + 1} · Est. ~${estMins} mins`,
       waitAr: `الترتيب #${sameTierPending + 1} · الانتظار التقريبي ~${estMins} دقيقة`,
-      speechEn: `Standard Fast-Track Ticket ${code}. Please proceed to Zone C, Fast-Track Clinic lounge. Your estimated wait time is ${estMins} minutes.`,
-      speechAr: `تذكرة المسار السريع رقم ${code}. يرجى التوجه إلى المنطقة جيم، استراحة المسار السريع. وقت الانتظار التقريبي ${estMins} دقيقة.`
+      speechEn: `Fast Track Ticket S ${num}. Stable condition. Please proceed to Zone C, Fast-Track Clinic lounge. Your estimated wait time is approximately ${estMins} minutes.`,
+      speechAr: `تذكرة المسار السريع، الرمز إس ${num}. حالتك مستقرة. يرجى التوجه إلى عيادة المسار السريع في المنطقة ج. وقت الانتظار التقريبي ${estMins} دقيقة.`
     };
   }
 
@@ -2595,19 +2618,37 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
         fBox.hidden = true;
       }
 
-      // Auto-populate optional health details if blank
+      // Auto-populate optional health details if blank or append if new
       let autoFilled = false;
-      if (st.extracted_allergies && !$('field-allergies').value.trim()) {
-        $('field-allergies').value = st.extracted_allergies;
-        autoFilled = true;
+      if (st.extracted_allergies) {
+        const curAllergies = $('field-allergies').value.trim();
+        if (!curAllergies) {
+          $('field-allergies').value = st.extracted_allergies;
+          autoFilled = true;
+        } else if (!curAllergies.toLowerCase().includes(st.extracted_allergies.toLowerCase())) {
+          $('field-allergies').value = curAllergies + ', ' + st.extracted_allergies;
+          autoFilled = true;
+        }
       }
-      if (st.extracted_medications && !$('field-medications').value.trim()) {
-        $('field-medications').value = st.extracted_medications;
-        autoFilled = true;
+      if (st.extracted_medications) {
+        const curMeds = $('field-medications').value.trim();
+        if (!curMeds) {
+          $('field-medications').value = st.extracted_medications;
+          autoFilled = true;
+        } else if (!curMeds.toLowerCase().includes(st.extracted_medications.toLowerCase())) {
+          $('field-medications').value = curMeds + ', ' + st.extracted_medications;
+          autoFilled = true;
+        }
       }
-      if (st.extracted_history && !$('field-history').value.trim()) {
-        $('field-history').value = st.extracted_history;
-        autoFilled = true;
+      if (st.extracted_history) {
+        const curHx = $('field-history').value.trim();
+        if (!curHx) {
+          $('field-history').value = st.extracted_history;
+          autoFilled = true;
+        } else if (!curHx.toLowerCase().includes(st.extracted_history.toLowerCase())) {
+          $('field-history').value = curHx + ', ' + st.extracted_history;
+          autoFilled = true;
+        }
       }
       if (autoFilled) {
         $('health-details-box').open = true;
@@ -3132,7 +3173,7 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
             },
             body: JSON.stringify({
               model: 'tts-1',
-              voice: targetLang === 'ar' ? 'onyx' : 'nova',
+              voice: targetLang === 'ar' ? 'alloy' : 'nova',
               input: msg,
               response_format: 'mp3'
             })
@@ -3157,8 +3198,17 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
           const match = voices.find((v) =>
             v.lang.toLowerCase().startsWith(targetLang === 'ar' ? 'ar' : 'en')
           );
-          if (match) u.voice = match;
-          u.rate = 0.96;
+          if (match) {
+            u.voice = match;
+            u.rate = 0.95;
+            window.speechSynthesis.speak(u);
+            return;
+          } else if (targetLang === 'ar') {
+            // Guard: Windows has no Arabic TTS voice installed by default. Do not let an English voice mumble Arabic Unicode!
+            toast(msg, msg);
+            return;
+          }
+          u.rate = 0.95;
           window.speechSynthesis.speak(u);
           return;
         }
@@ -3847,11 +3897,18 @@ dialog pre{background:#020617;border:1px solid var(--line);border-radius:13px;pa
             voiceStatus('transcribing');
             const res = await window.transcribeAudio(blob);
             if (res && res.text) {
-              $('field-complaint').value = res.text;
+              const prev = $('field-complaint').value.trim();
+              let fullComplaint = res.text.trim();
+              if (prev && !prev.includes(fullComplaint)) {
+                const isAr = /[\u0600-\u06FF]/.test(prev) || /[\u0600-\u06FF]/.test(fullComplaint);
+                const separator = isAr ? '، ' : '. ';
+                const hasPunct = /[.،,؛!?]$/.test(prev);
+                fullComplaint = prev + (hasPunct ? ' ' : separator) + fullComplaint;
+              }
+              $('field-complaint').value = fullComplaint;
               $('confirm-transcript').checked = false;
               state.source = res.mode === 'openai' ? 'voice-openai' : 'voice-browser';
-              state.structured = res.structured || M.localStructure(res.text, getForm());
-              renderAIPreview(state.structured);
+              state.structured = await runAIStructuring(true);
               updateRedFlag();
               if (res.mode === 'openai') {
                 voiceStatus('transcribed_openai', res.model);

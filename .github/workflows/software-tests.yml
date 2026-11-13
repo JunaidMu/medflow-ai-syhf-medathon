@@ -1,0 +1,41 @@
+name: Software behavior tests
+
+# Runs the MedFlow AI prototype test suite on every push and pull request.
+# The suite executes the 30 synthetic scenarios against the actual medflow-core.js
+# logic and compares per-scenario results with the committed baseline
+# (test-results.json). The workflow FAILS when software behavior changes
+# unintentionally — not when a test "fails", because some scenarios are designed
+# to expose genuine, documented limitations.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  software-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run app & API test suite (offline fallback mode)
+        run: node test-mvp.js
+
+      - name: Run tests against medflow-core.js and check behavior baseline
+        run: node run-tests.cjs --check
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: medflow-test-results
+          path: |
+            test-results.json
+            TEST_REPORT.md

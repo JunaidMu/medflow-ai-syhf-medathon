@@ -348,7 +348,7 @@ async function callOpenAITTS(apiKey, speechText, lang = 'ar') {
       },
       body: JSON.stringify({
         model: 'tts-1',
-        voice: lang === 'ar' ? 'onyx' : 'nova',
+        voice: lang === 'ar' ? 'alloy' : 'nova',
         input,
         response_format: 'mp3'
       })

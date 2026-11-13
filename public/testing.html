@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="MedFlow AI — Prototype Testing & Validation. Software behavior testing with synthetic scenarios. Not clinical validation.">
+<meta name="color-scheme" content="dark">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<title>MedFlow AI — Prototype Testing &amp; Validation</title>
+<style>
+:root{color-scheme:dark;--night:#020617;--panel:#0f172a;--muted:#94a3b8;--line:#28364c;--cyan:#22d3ee;--emerald:#10b981;--red:#f87171;--amber:#fbbf24}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#020617,#0f172a 48%,#020617);min-height:100vh;font-family:'IBM Plex Sans',Tahoma,system-ui,sans-serif;color:#f8fafc;font-size:14px;line-height:1.5}
+button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #22d3ee;outline-offset:3px}
+h1,h2,h3,p{margin:0}h1{font-size:clamp(24px,3vw,34px);letter-spacing:-.03em}h2{font-size:20px}h3{font-size:15px}
+small,.small{font-size:12px}.muted{color:#a8b6ca}.mono{font-family:ui-monospace,SFMono-Regular,monospace;font-size:11px;direction:ltr;unicode-bidi:isolate}
+.eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--cyan);margin-bottom:6px}
+.topbar{background:#0f172ae8;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.topbar-inner{max-width:1240px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 24px}
+.brand{display:flex;align-items:center;gap:11px}
+.brandmark{height:38px;width:38px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#34d399,#22d3ee);color:#0f172a;font-weight:800}
+.brand strong{font-size:18px;display:block}.brand small{color:#94a3b8;font-size:10px}
+.container{max-width:1240px;margin:auto;padding:26px 24px 60px}
+.banner{background:#fbbf2410;border:1px solid #fbbf2455;border-radius:14px;padding:14px 17px;margin-bottom:20px;font-size:12px;color:#fde68a;display:flex;gap:11px;align-items:flex-start}
+.banner strong{display:block;margin-bottom:3px;color:#fde047}
+.disclaimer{background:#ef44440b;border:1px solid #ef44444a;border-radius:14px;padding:13px 17px;margin-bottom:22px;font-size:12px;color:#f8caca}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px}
+.stat{background:#0f172aeb;border:1px solid #94a3b829;border-radius:16px;padding:15px 17px}
+.stat span{font-size:11px;color:#94a3b8;display:block}.stat b{display:block;font-size:24px;margin-top:5px;line-height:1.2}
+.stat.pass b{color:#6ee7b7}.stat.fail b{color:#fca5a5}.stat.review b{color:#fde68a}
+.env{background:#0f172aeb;border:1px solid #94a3b829;border-radius:16px;padding:15px 19px;margin-bottom:20px;font-size:12px;color:#a8b6ca}
+.env b{color:#e2e8f0}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.btn{border:1px solid #3c4c66;background:#142035;color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:600;display:inline-flex;gap:8px;align-items:center;transition:background .18s}
+.btn:hover{background:#24334b}.btn.primary{background:#10b981;color:#021d17;border-color:#34d399}.btn.primary:hover{background:#34d399}
+.btn.cyan{background:#22d3ee17;color:#a5f3fc;border-color:#22d3ee55}.btn:disabled{opacity:.45;cursor:not-allowed}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.filters input{max-width:320px;padding:9px 11px;background:#020617b8;border:1px solid #334155;border-radius:10px;color:#f1f5f9;outline:none}
+.filters select{padding:9px;background:#020617b8;border:1px solid #334155;border-radius:10px;color:#f1f5f9;outline:none}
+.glass{background:#0f172aeb;border:1px solid #94a3b829;border-radius:18px}
+.table-scroll{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:start;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#a8b6ca;background:#02061755;font-weight:600}
+td,th{padding:12px 14px;border-bottom:1px solid #28364c90;vertical-align:top}
+td{overflow-wrap:anywhere}tr:hover td{background:#1e293b33}
+.badge{font-size:10px;font-weight:700;border:1px solid var(--line);padding:4px 9px;border-radius:99px;display:inline-block;white-space:nowrap}
+.badge.green{color:#6ee7b7;background:#10b98116;border-color:#10b9814d}
+.badge.red{color:#fca5a5;background:#ef444418;border-color:#ef444460}
+.badge.amber{color:#fde68a;background:#fbbf2412;border-color:#fbbf2440}
+details.cell{margin:0}details.cell summary{cursor:pointer;color:#a5f3fc;font-size:11px;font-weight:600;list-style-position:inside}
+.detail-body{margin-top:10px;display:grid;gap:10px;font-size:12px}
+.detail-body .block{border:1px solid var(--line);border-radius:10px;padding:11px;background:#02061766}
+.detail-body .block h4{margin:0 0 6px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#67e8f9}
+.detail-body ul{margin:6px 0 0;padding-inline-start:18px}.detail-body li{margin:3px 0}
+.pass{color:#6ee7b7}.fail{color:#fca5a5}
+section.block{margin-top:26px}
+.limits{padding:20px 24px}.limits ol{margin:10px 0 0;padding-inline-start:20px;color:#cbd5e1;font-size:12px;line-height:1.7}
+.reqs{padding:20px 24px}.reqs dl{margin:10px 0 0;display:grid;gap:8px}
+.reqs dt{font-family:ui-monospace,monospace;font-size:11px;color:#67e8f9}.reqs dd{margin:0;font-size:12px;color:#cbd5e1}
+.empty-run{padding:38px;text-align:center;color:#a8b6ca}
+footer{max-width:1240px;margin:auto;padding:18px 24px 40px;font-size:10px;color:#94a3b8}
+@media(max-width:980px){.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:560px){.stats{grid-template-columns:1fr 1fr}.container{padding:20px 14px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="topbar-inner">
+  <div class="brand"><div class="brandmark">MF</div><div><strong>MedFlow AI</strong><small>Prototype Testing &amp; Validation</small></div></div>
+  <a href="index.html" style="color:#a5f3fc;font-size:12px;font-weight:600;text-decoration:none">← Back to patient intake prototype</a>
+</div></header>
+
+<div class="container">
+  <div class="banner"><span aria-hidden="true">⚠</span><div>
+    <strong>Software behavior testing with synthetic scenarios. Not clinical validation.</strong>
+    These results describe software behavior under fictional test conditions. They do not establish clinical accuracy, safety, or suitability for use with real patients. No scenario has clinical ground truth; every case is labeled <em>Clinical review status: Not clinically reviewed</em>.
+  </div></div>
+
+  <h1>MedFlow AI — Prototype Testing &amp; Validation</h1>
+  <p class="muted" style="margin:8px 0 22px;max-width:900px">This dashboard executes 30 reproducible synthetic scenarios against the <strong>actual MedFlow prototype logic</strong> (<span class="mono">medflow-core.js</span> — the same file <span class="mono">index.html</span> loads). There is no separate rule engine and no stored or fabricated result: every number below comes from code that runs when you press <em>Run Tests</em>.</p>
+
+  <div class="stats">
+    <div class="stat"><span>Total synthetic scenarios</span><b id="stat-total">—</b></div>
+    <div class="stat"><span>Executed tests</span><b id="stat-executed">—</b></div>
+    <div class="stat pass"><span>Passing software checks</span><b id="stat-passed">—</b></div>
+    <div class="stat fail"><span>Failing software checks</span><b id="stat-failed">—</b></div>
+    <div class="stat review"><span>Needing clinical review</span><b id="stat-review">—</b></div>
+    <div class="stat"><span>Latest test execution</span><b id="stat-when" style="font-size:13px;line-height:1.4">Not run in this browser yet</b></div>
+  </div>
+
+  <div class="env" id="env-card"><b>Test environment:</b> <span id="env-text">—</span></div>
+
+  <div class="controls">
+    <button id="run-tests" class="btn primary" type="button">▶ Run Tests</button>
+    <button id="dl-json" class="btn cyan" type="button" disabled>Download results (JSON)</button>
+    <button id="dl-csv" class="btn cyan" type="button" disabled>Download results (CSV)</button>
+    <button id="dl-report" class="btn cyan" type="button" disabled>Download report (Markdown)</button>
+    <span id="run-status" class="muted small" role="status">No test run yet in this browser. Press “Run Tests” to execute all 30 scenarios against the current code.</span>
+  </div>
+
+  <div class="filters">
+    <input id="search" type="search" placeholder="Search ID, language, category, complaint, result…" aria-label="Search test results">
+    <select id="filter-group" aria-label="Filter by group">
+      <option value="all">All groups</option><option value="A">Group A — English statements</option>
+      <option value="B">Group B — English negation</option><option value="C">Group C — Modern Standard Arabic</option>
+      <option value="D">Group D — Saudi colloquial Arabic</option><option value="E">Group E — Vitals &amp; boundaries</option>
+    </select>
+    <select id="filter-result" aria-label="Filter by result">
+      <option value="all">All results</option><option value="passed">Passed</option><option value="failed">Failed</option><option value="review">Needs clinical review</option>
+    </select>
+  </div>
+
+  <div class="glass table-scroll">
+    <table>
+      <thead><tr><th>ID</th><th>Group</th><th>Language</th><th>Category</th><th>Result</th><th>Clinical review</th><th>Details</th></tr></thead>
+      <tbody id="tbody"><tr><td colspan="7" class="empty-run">No test run yet in this browser. Press “Run Tests” — results are computed live from the actual prototype code.</td></tr></tbody>
+    </table>
+  </div>
+
+  <section class="block glass reqs">
+    <h2>Documented software requirements catalog</h2>
+    <p class="muted small" style="margin-top:6px">Requirements are derived from the prototype’s own disclosed, in-source rule set and code comments. They are software requirements, not clinical requirements.</p>
+    <dl id="req-list"></dl>
+  </section>
+
+  <section class="block glass limits">
+    <h2>Known limitations</h2>
+    <ol>
+      <li><strong>Rule coverage is small and disclosed on purpose.</strong> Many real symptoms and phrasings in both languages are unrecognized and fall back to “unclassified”, which depends entirely on human triage.</li>
+      <li><strong>Negation support is narrow.</strong> Only exact listed phrases are stripped: <span class="mono">no / denies / without</span> (English) and <span class="mono">لا اعاني من / لا يوجد / بدون</span> (Arabic). Confirmed gaps: first-person “deny” (B2), negation scope across “or” (B4), Arabic negators with intervening words (C6), colloquial negators such as <span class="mono">ما في</span> (D3).</li>
+      <li><strong>English matching is word-order dependent.</strong> “chest pain” matches; “pain in my chest” does not (A6). “trouble breathing” is unrecognized (A2).</li>
+      <li><strong>Arabic orthography variants are not unified.</strong> The disclosed fever term <span class="mono">حراره</span> (haa) does not match MSA <span class="mono">حرارة</span> (taa marbuta) — C5.</li>
+      <li><strong>Colloquial Arabic wording may be unrecognized.</strong> Colloquial cardiac pain (<span class="mono">وجع قلبي … صدري</span>) falls back to “unclassified” (D1).</li>
+      <li><strong>Vital-sign input ranges are broad.</strong> Physiologically implausible but in-range values (e.g., SpO₂ 45) are accepted; range plausibility requires clinical review.</li>
+      <li><strong>Speech recognition is not connected.</strong> Transcripts are typed or manually confirmed by the patient.</li>
+      <li><strong>No clinical validation of any kind.</strong> No sensitivity, specificity, diagnostic accuracy, or patient-safety claims can be made from these results. The prototype performs no ESI assignment, diagnosis, or treatment.</li>
+      <li><strong>Demo data handling.</strong> Browser localStorage is unencrypted and the demo clinician role is not real authentication. The prototype is not connected to any hospital system.</li>
+      <li><strong>The test suite itself is software-level.</strong> All 30 scenarios are fictional; there is no clinical ground truth, and every case is labeled “Not clinically reviewed”.</li>
+    </ol>
+  </section>
+</div>
+<footer>MedFlow AI · MEDATHON 2026 prototype · Results files: <span class="mono">test-results.json</span> · <span class="mono">TEST_REPORT.md</span> · Regenerated automatically by <span class="mono">run-tests.cjs</span> and GitHub Actions on every code change.</footer>
+
+<script src="medflow-core.js"></script>
+<script src="test-scenarios.js"></script>
+<script src="test-runner.js"></script>
+<script src="report-generator.js"></script>
+<script>
+(function(){
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+  var KEY = 'medflow.testing.v1';
+  var current = null;
+
+  function environmentMeta(){
+    var tz = 'unknown';
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'unknown'; } catch(e){}
+    return {
+      runtime: 'Browser · ' + navigator.userAgent,
+      platform: navigator.platform || 'unknown',
+      language: navigator.language || 'unknown',
+      timeZone: tz,
+      viewport: window.innerWidth + '×' + window.innerHeight,
+      page: location.protocol + '//' + location.host + location.pathname,
+      file: 'medflow-core.js (loaded and executed verbatim)'
+    };
+  }
+
+  function fmtWhen(iso){
+    try { return new Date(iso).toLocaleString('en-GB', { timeZone:'Asia/Riyadh', year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' }) + ' (Riyadh)'; }
+    catch(e){ return iso; }
+  }
+
+  function setStats(results){
+    var s = results.summary;
+    $('stat-total').textContent = s.total;
+    $('stat-executed').textContent = s.executed;
+    $('stat-passed').textContent = s.passed;
+    $('stat-failed').textContent = s.failed;
+    $('stat-review').textContent = s.clinicalReviewNeeded;
+    $('stat-when').textContent = fmtWhen(results.generatedAt);
+    var env = results.environment || {};
+    $('env-text').textContent = [env.runtime, env.platform, env.timeZone, env.file].filter(Boolean).join(' · ') + ' · Suite v' + results.suiteVersion + ' · ' + results.softwareName + ' ' + results.softwareVersion;
+    $('run-status').textContent = 'Executed ' + s.executed + ' scenarios at ' + fmtWhen(results.generatedAt) + '. ' + s.passed + ' passed, ' + s.failed + ' failed software checks, ' + s.clinicalReviewNeeded + ' need clinical review.';
+    $('dl-json').disabled = false; $('dl-csv').disabled = false; $('dl-report').disabled = false;
+  }
+
+  function badge(cls, text){ var b = document.createElement('span'); b.className = 'badge ' + cls; b.textContent = text; return b; }
+
+  function block(title, innerHtml){
+    var d = document.createElement('div'); d.className = 'block';
+    var h = document.createElement('h4'); h.textContent = title;
+    var body = document.createElement('div'); body.innerHTML = innerHtml;
+    d.append(h, body); return d;
+  }
+
+  function esc(s){ var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+
+  function renderTable(results){
+    var search = $('search').value.trim().toLowerCase();
+    var group = $('filter-group').value;
+    var result = $('filter-result').value;
+    var tbody = $('tbody');
+    tbody.replaceChildren();
+    var shown = 0;
+    for (var r of results.results){
+      if (group !== 'all' && r.group !== group) continue;
+      if (result === 'passed' && r.softwareResult !== 'passed') continue;
+      if (result === 'failed' && r.softwareResult !== 'failed') continue;
+      if (result === 'review' && !r.clinicalReviewNeeded) continue;
+      if (search){
+        var hay = (r.id + ' ' + r.group + ' ' + r.language + ' ' + r.category + ' ' + r.complaint + ' ' + r.softwareResult + ' ' + r.explanation).toLowerCase();
+        if (hay.indexOf(search) < 0) continue;
+      }
+      shown++;
+      var tr = document.createElement('tr');
+      [r.id, 'Group ' + r.group, r.language, r.category].forEach(function(v){ var td = document.createElement('td'); td.textContent = v; tr.append(td); });
+      var tdr = document.createElement('td');
+      tdr.append(r.softwareResult === 'passed' ? badge('green','PASS') : badge('red','FAIL'));
+      tr.append(tdr);
+      var tdv = document.createElement('td');
+      tdv.append(r.clinicalReviewNeeded ? badge('amber','Review needed') : badge('green','No review needed'));
+      var st = document.createElement('div'); st.className = 'muted small'; st.textContent = r.clinicalReviewStatus; tdv.append(st);
+      tr.append(tdv);
+
+      var tdd = document.createElement('td');
+      var det = document.createElement('details'); det.className = 'cell';
+      var sum = document.createElement('summary'); sum.textContent = 'Explanation & actual output'; det.append(sum);
+      var body = document.createElement('div'); body.className = 'detail-body';
+
+      var checksHtml = r.checks.map(function(c){
+        return '<li class="' + (c.passed ? 'pass' : 'fail') + '">' + (c.passed ? '✓' : '✗') + ' ' + esc(c.label) + '</li>';
+      }).join('');
+      body.append(block('Documented expected behavior (requirement)', esc(r.requirement)));
+      body.append(block('Checks', '<ul>' + checksHtml + '</ul>'));
+      var a = r.actual;
+      var actualHtml =
+        '<div>Intake validation errors: <span class="mono">' + (a.validationErrors.length ? esc(JSON.stringify(a.validationErrors)) : 'none') + '</span></div>' +
+        '<div>Urgency flag: <strong>' + esc(a.flag.level) + '</strong> (reason: ' + esc(a.flag.reason) + ')</div>' +
+        '<div>Vital values accepted &amp; stored: <span class="mono">' + (Object.keys(a.acceptedVitals).length ? esc(JSON.stringify(a.acceptedVitals)) : 'none') + '</span></div>' +
+        '<div>FHIR bundle: type <span class="mono">' + esc(a.fhir.bundleType) + '</span>, first resource <span class="mono">' + esc(a.fhir.firstResourceType) + '</span>, resources <span class="mono">' + esc(JSON.stringify(a.fhir.resourceCounts)) + '</span></div>';
+      body.append(block('Actual output (executed)', actualHtml));
+      body.append(block('SOAP note — Subjective (English, verbatim)', '<div>' + esc(a.soapEn.s) + '</div>'));
+      body.append(block('SOAP note — Subjective (Arabic, verbatim)', '<div>' + esc(a.soapAr.s) + '</div>'));
+      body.append(block('Explanation', esc(r.explanation)));
+      if (r.clinicalConcern) body.append(block('Safety concern raised by this test', esc(r.clinicalConcern)));
+      body.append(block('Clinical reference status', '<div><strong>' + esc(r.clinicalReviewStatus) + '</strong> — no clinician has reviewed this case. ' + (r.clinicalReviewNeeded ? 'Medical expert review is needed.' : '') + '</div>'));
+      body.append(block('Fictional input', '<div>Complaint: ' + esc(r.complaint) + '</div><div>Vitals: <span class="mono">' + (r.vitalsEntered ? esc(JSON.stringify(r.vitalsEntered)) : 'none') + '</span></div>'));
+      det.append(body);
+      tdd.append(det); tr.append(tdd);
+      tbody.append(tr);
+    }
+    if (!shown){
+      var tr2 = document.createElement('tr'); var td2 = document.createElement('td');
+      td2.colSpan = 7; td2.className = 'empty-run'; td2.textContent = 'No scenarios match the current filters.';
+      tr2.append(td2); tbody.append(tr2);
+    }
+  }
+
+  function runTests(){
+    if (!window.MedFlow || !window.MedFlowTestScenarios || !window.MedFlowTestRunner){
+      $('run-status').textContent = 'Error: medflow-core.js or the test suite files failed to load. Open this page from the repository folder (testing.html next to medflow-core.js). No results are shown because none were executed.';
+      return;
+    }
+    $('run-status').textContent = 'Running 30 scenarios against the actual prototype logic…';
+    try {
+      var results = window.MedFlowTestRunner.runAll(window.MedFlowTestScenarios.scenarios, window.MedFlow, environmentMeta());
+      current = results;
+      try { localStorage.setItem(KEY, JSON.stringify(results)); } catch(e){}
+      setStats(results); renderTable(results);
+    } catch (err){
+      $('run-status').textContent = 'Test execution failed: ' + (err && err.message ? err.message : err) + ' — no results were produced.';
+    }
+  }
+
+  function download(name, text, type){
+    var blob = new Blob([text], { type: type || 'application/octet-stream' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href = url; a.download = name;
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+  }
+
+  function renderRequirements(){
+    var dl = $('req-list'); dl.replaceChildren();
+    var reqs = (window.MedFlowTestScenarios && window.MedFlowTestScenarios.requirements) || {};
+    Object.keys(reqs).forEach(function(k){
+      var dt = document.createElement('dt'); dt.textContent = k;
+      var dd = document.createElement('dd'); dd.textContent = reqs[k];
+      dl.append(dt, dd);
+    });
+  }
+
+  $('run-tests').addEventListener('click', runTests);
+  $('search').addEventListener('input', function(){ if (current) renderTable(current); });
+  $('filter-group').addEventListener('change', function(){ if (current) renderTable(current); });
+  $('filter-result').addEventListener('change', function(){ if (current) renderTable(current); });
+  $('dl-json').addEventListener('click', function(){ if (current) download('test-results.json', JSON.stringify(current, null, 2) + '\n', 'application/json'); });
+  $('dl-csv').addEventListener('click', function(){ if (current) download('test-results.csv', window.MedFlowTestRunner.toCSV(current.results), 'text/csv'); });
+  $('dl-report').addEventListener('click', function(){ if (current) download('TEST_REPORT.md', window.MedFlowReportGenerator.buildReport(current), 'text/markdown'); });
+
+  renderRequirements();
+  // Restore the latest genuinely executed run in this browser (never fabricated).
+  try {
+    var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (saved && saved.summary && Array.isArray(saved.results)){
+      current = saved;
+      setStats(saved); renderTable(saved);
+    }
+  } catch(e){}
+})();
+</script>
+</body>
+</html>

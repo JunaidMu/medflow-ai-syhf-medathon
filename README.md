@@ -51,8 +51,24 @@ Then open **`http://localhost:3000`** in Chrome or Edge.
 
 ### Run Automated Verification Tests
 ```bash
-npm test
+npm test                  # app/API checks (16) + clinical scenario baseline check (30)
+npm run test:scenarios    # re-run the 30 synthetic scenarios, regenerate TEST_REPORT.md + test-results.json
 ```
+
+### 🧪 Testing & Validation System (30 synthetic scenarios)
+Open **http://localhost:3000/testing.html** (or the footer link in the app) and press **▶ Run Tests** to execute 30 fictional patient statements live against the exact clinical engine the app runs (`public/medflow-core.js`):
+
+| Group | Focus |
+|---|---|
+| A | English symptom statements & alternative wording ("trouble breathing", "pain in my chest") |
+| B | English negation ("I deny chest pain", "no chest pain or shortness of breath") |
+| C | Modern Standard Arabic, incl. negation and ة/ه spelling variants |
+| D | Saudi colloquial Arabic («وجع قلبي», «ما في وجع في صدري») |
+| E | Vital-sign thresholds, boundaries and invalid input |
+
+**Current result: 30 / 30 software requirements met.** The suite originally exposed 7 real gaps (missed emergencies and false alarms on negated/colloquial phrasing); these were fixed in the engine — not by editing the tests. GitHub Actions (`.github/workflows/software-tests.yml`) re-runs everything on each push and fails if triage behaviour changes unexpectedly. Results are in [TEST_REPORT.md](TEST_REPORT.md); qualified reviewers can use [CLINICIAN_REVIEW_TEMPLATE.md](CLINICIAN_REVIEW_TEMPLATE.md).
+
+> Software conformance ≠ clinical validation. All cases remain "Not clinically reviewed" until a qualified clinician signs off.
 
 ---
 
